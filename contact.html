@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact &amp; FAQ | Hope Online Tuition School</title>
+  <meta name="description" content="Contact Hope Online Tuition School and read answers to common questions.">
+  <link rel="icon" href="images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a href="index.html" class="brand" aria-label="Hope Online Tuition School home">
+        <span class="brand-logo"><img src="images/logo.jpg" alt="Hope"></span>
+      </a>
+      <button class="lang-switch" type="button" aria-label="Switch language / ဘာသာစကား ပြောင်းရန်" data-no-translate><span data-lang="en">EN</span><span data-lang="my">မြန်မာ</span></button>
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="policies.html">Policies</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="enrol.html" class="btn btn--gold">Enrol now</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <span class="eyebrow">Contact</span>
+        <h1>Ask us anything</h1>
+      </div>
+    </section>
+
+    <section class="section section--cream">
+      <div class="container">
+        <div class="card form-card narrow reveal">
+          <!-- To receive messages, add data-endpoint="https://formspree.io/f/your-id" to this form. See js/main.js. -->
+          <form data-hope-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="c-name">Your name <span class="req">*</span></label>
+                <input id="c-name" name="name" type="text" required autocomplete="name">
+                <span class="error-msg">Please enter a name.</span>
+              </div>
+              <div class="field">
+                <label for="c-email">Email <span class="req">*</span></label>
+                <input id="c-email" name="email" type="email" required autocomplete="email">
+                <span class="error-msg">Please enter a valid email.</span>
+              </div>
+              <div class="field field--full">
+                <label for="c-msg">Message <span class="req">*</span></label>
+                <textarea id="c-msg" name="message" required></textarea>
+                <span class="error-msg">Please write a message.</span>
+              </div>
+              <div class="field--full">
+                <button type="submit" class="btn btn--gold" style="width:100%">Send</button>
+              </div>
+            </div>
+          </form>
+          <div class="form-success">
+            <span class="star"></span>
+            <h2>Message sent</h2>
+            <p>We will reply soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2>FAQ</h2>
+        </div>
+        <div class="faq reveal">
+          <details>
+            <summary>Who are the tutors?</summary>
+            <p>Recent CIE IGCSE students who scored A* in the subjects they teach.</p>
+          </details>
+          <details>
+            <summary>How long is a lesson?</summary>
+            <p>90 minutes, one-to-one.</p>
+          </details>
+          <details>
+            <summary>Which exam board?</summary>
+            <p>CIE (Cambridge) IGCSE only.</p>
+          </details>
+          <details>
+            <summary>How do I pay?</summary>
+            <p>Monthly packages, paid in advance. See the <a href="policies.html#payment">payment policy</a>.</p>
+          </details>
+          <details>
+            <summary>Can I reschedule?</summary>
+            <p>Yes, with at least 24 hours’ notice.</p>
+          </details>
+          <details>
+            <summary>What do I need?</summary>
+            <p>A laptop or tablet, stable internet and a quiet place to work.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="word">Hope</div>
+          <div class="sub">ONLINE TUITION SCHOOL</div>
+          <p>One-to-one CIE IGCSE tutoring.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="enrol.html">Enrol now</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Policies</h4>
+          <ul>
+            <li><a href="policies.html#payment">Payment</a></li>
+            <li><a href="policies.html#cancellation">Cancellation</a></li>
+            <li><a href="policies.html#safeguarding">Safeguarding</a></li>
+            <li><a href="policies.html#privacy">Privacy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="contact.html">Contact us</a></li>
+            <li><a href="contact.html#faq">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year></span> Hope Education</span>
+        <span>Learn · Grow · Achieve</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/translations.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

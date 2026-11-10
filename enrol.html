@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enrol | Hope Online Tuition School</title>
+  <meta name="description" content="Enrol in one-to-one CIE IGCSE tutoring with Hope Online Tuition School.">
+  <link rel="icon" href="images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a href="index.html" class="brand" aria-label="Hope Online Tuition School home">
+        <span class="brand-logo"><img src="images/logo.jpg" alt="Hope"></span>
+      </a>
+      <button class="lang-switch" type="button" aria-label="Switch language / ဘာသာစကား ပြောင်းရန်" data-no-translate><span data-lang="en">EN</span><span data-lang="my">မြန်မာ</span></button>
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="policies.html">Policies</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="enrol.html" class="btn btn--gold">Enrol now</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <span class="eyebrow">Enrol</span>
+        <h1>Start learning with Hope</h1>
+        <p>Send the form and we will contact you to arrange your first lesson.</p>
+      </div>
+    </section>
+
+    <section class="section section--cream">
+      <div class="container form-wrap">
+        <div class="reveal">
+          <h2>How it works</h2>
+          <ul class="info-list">
+            <li><span class="icon"><strong>1</strong></span><div><strong>Send this form</strong></div></li>
+            <li><span class="icon"><strong>2</strong></span><div><strong>We match you with a tutor</strong></div></li>
+            <li><span class="icon"><strong>3</strong></span><div><strong>Pay and start learning</strong></div></li>
+          </ul>
+        </div>
+
+        <div class="card form-card reveal">
+          <!-- To receive submissions, add data-endpoint="https://formspree.io/f/your-id" to this form. See js/main.js. -->
+          <form data-hope-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="student">Student name <span class="req">*</span></label>
+                <input id="student" name="student_name" type="text" required autocomplete="name">
+                <span class="error-msg">Please enter a name.</span>
+              </div>
+              <div class="field">
+                <label for="email">Email <span class="req">*</span></label>
+                <input id="email" name="email" type="email" required autocomplete="email">
+                <span class="error-msg">Please enter a valid email.</span>
+              </div>
+              <div class="field field--full">
+                <label for="phone">Phone / WhatsApp</label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel">
+              </div>
+
+              <div class="field field--full" data-require-one>
+                <span class="label">Subjects <span class="req">*</span></span>
+                <!-- TODO: keep this list the same as the subjects on services.html -->
+                <div class="check-group">
+                  <label class="check"><input type="checkbox" name="subjects" value="Mathematics">Mathematics</label>
+                  <label class="check"><input type="checkbox" name="subjects" value="Physics">Physics</label>
+                  <label class="check"><input type="checkbox" name="subjects" value="Chemistry">Chemistry</label>
+                  <label class="check"><input type="checkbox" name="subjects" value="Biology">Biology</label>
+                  <label class="check"><input type="checkbox" name="subjects" value="English">English</label>
+                  <label class="check"><input type="checkbox" name="subjects" value="Economics">Economics</label>
+                </div>
+                <span class="error-msg">Please choose a subject.</span>
+              </div>
+
+              <div class="field field--full">
+                <label for="plan">Package <span class="req">*</span></label>
+                <select id="plan" name="package" required>
+                  <option value="">Choose…</option>
+                  <option value="starter">Starter – 4 lessons / month</option>
+                  <option value="focus">Focus – 8 lessons / month</option>
+                  <option value="exam">Exam Prep – 12 lessons / month</option>
+                  <option value="unsure">Not sure yet</option>
+                </select>
+                <span class="error-msg">Please choose a package.</span>
+              </div>
+
+              <div class="field field--full">
+                <label for="topics">Topics you find hardest <span class="req">*</span></label>
+                <textarea id="topics" name="weak_topics" required></textarea>
+                <span class="error-msg">Please add at least one topic.</span>
+              </div>
+
+              <div class="field field--full">
+                <label class="consent">
+                  <input type="checkbox" name="consent" required>
+                  <span>I agree to the <a href="policies.html" target="_blank">policies</a>. If the student is under 18, a parent or guardian agrees too.</span>
+                </label>
+                <span class="error-msg">Please agree before sending.</span>
+              </div>
+
+              <div class="field--full">
+                <button type="submit" class="btn btn--gold" style="width:100%">Send</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="form-success">
+            <span class="star"></span>
+            <h2>Thank you!</h2>
+            <p>We will contact you soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="word">Hope</div>
+          <div class="sub">ONLINE TUITION SCHOOL</div>
+          <p>One-to-one CIE IGCSE tutoring.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="enrol.html">Enrol now</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Policies</h4>
+          <ul>
+            <li><a href="policies.html#payment">Payment</a></li>
+            <li><a href="policies.html#cancellation">Cancellation</a></li>
+            <li><a href="policies.html#safeguarding">Safeguarding</a></li>
+            <li><a href="policies.html#privacy">Privacy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="contact.html">Contact us</a></li>
+            <li><a href="contact.html#faq">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year></span> Hope Education</span>
+        <span>Learn · Grow · Achieve</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/translations.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
