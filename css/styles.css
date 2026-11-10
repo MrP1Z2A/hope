@@ -343,6 +343,15 @@ html[lang="my"] .founder .role { letter-spacing: 0; }
 .policy:last-child { border-bottom: 0; }
 .policy h2 { font-size: 1.8rem; display: flex; align-items: center; gap: 14px; }
 .policy ul { padding-left: 20px; }
+.policy h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+.policy-layout > * { min-width: 0; } /* lets the table scroll instead of widening the page */
+
+/* Absence rules table — scrolls sideways on small phones instead of squashing */
+.table-wrap { overflow-x: auto; margin: 18px 0 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.policy-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.95rem; }
+.policy-table th, .policy-table td { padding: 12px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.policy-table th { background: var(--tint); color: var(--navy); font-weight: 700; }
+.policy-table tbody tr:last-child td { border-bottom: 0; }
 .policy li { margin-bottom: 8px; }
 
 /* ---------- Forms ---------- */
