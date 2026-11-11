@@ -37,95 +37,202 @@
       <div class="container">
         <span class="eyebrow">Enrol</span>
         <h1>Start learning with Hope</h1>
-        <p>Send the form and we will contact you to arrange your first lesson.</p>
+        <p>Six simple steps.</p>
       </div>
     </section>
 
     <section class="section section--cream">
       <div class="container form-wrap">
+        <!-- Enrolment steps (from the Hope Education Student Enrollment Process).
+             The step the student is on is highlighted by js/enrol.js. -->
         <div class="reveal">
-          <h2>How it works</h2>
-          <ul class="info-list">
-            <li><span class="icon"><strong>1</strong></span><div><strong>Send this form</strong></div></li>
-            <li><span class="icon"><strong>2</strong></span><div><strong>We match you with a tutor</strong></div></li>
-            <li><span class="icon"><strong>3</strong></span><div><strong>Pay and start learning</strong></div></li>
-          </ul>
+          <h2>How enrolment works</h2>
+          <ol class="enrol-steps">
+            <li data-step="1"><span class="num">1</span><span>Your details</span></li>
+            <li data-step="2"><span class="num">2</span><span>Learning needs</span></li>
+            <li data-step="3"><span class="num">3</span><span>Read the policies</span></li>
+            <li data-step="4"><span class="num">4</span><span>Choose a package</span></li>
+            <li data-step="5"><span class="num">5</span><span>Pay online</span></li>
+            <li data-step="6"><span class="num">6</span><span>Confirmation and Student ID</span></li>
+          </ol>
+          <p class="small-note">Steps 5 and 6 happen after we confirm your tutor.</p>
         </div>
 
         <div class="card form-card reveal">
-          <!-- To receive submissions, add data-endpoint="https://formspree.io/f/your-id" to this form. See js/main.js. -->
-          <form data-hope-form>
-            <div class="form-grid">
-              <div class="field">
-                <label for="student">Student name <span class="req">*</span></label>
-                <input id="student" name="student_name" type="text" required autocomplete="name">
-                <span class="error-msg">Please enter a name.</span>
-              </div>
-              <div class="field">
-                <label for="email">Email <span class="req">*</span></label>
-                <input id="email" name="email" type="email" required autocomplete="email">
-                <span class="error-msg">Please enter a valid email.</span>
-              </div>
-              <div class="field field--full">
-                <label for="phone">Phone / WhatsApp</label>
-                <input id="phone" name="phone" type="tel" autocomplete="tel">
-              </div>
+          <!-- To receive submissions, add data-endpoint="https://formspree.io/f/your-id" to this form. -->
+          <form id="enrol-form" novalidate>
+            <input type="hidden" name="policy_version" value="1.0">
+            <input type="hidden" name="policy_accepted_at" value="">
 
-              <div class="field field--full" data-require-one>
-                <span class="label">Subjects <span class="req">*</span></span>
-                <!-- TODO: keep this list the same as the subjects on services.html -->
-                <div class="check-group">
-                  <label class="check"><input type="checkbox" name="subjects" value="Mathematics">Mathematics</label>
-                  <label class="check"><input type="checkbox" name="subjects" value="Physics">Physics</label>
-                  <label class="check"><input type="checkbox" name="subjects" value="Chemistry">Chemistry</label>
-                  <label class="check"><input type="checkbox" name="subjects" value="Biology">Biology</label>
-                  <label class="check"><input type="checkbox" name="subjects" value="English">English</label>
-                  <label class="check"><input type="checkbox" name="subjects" value="Economics">Economics</label>
+            <!-- Step 1: details -->
+            <fieldset class="wizard-step" data-step="1">
+              <h3>Your details</h3>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label for="student">Student name <span class="req">*</span></label>
+                  <input id="student" name="student_name" type="text" required autocomplete="name">
+                  <span class="error-msg">Please enter a name.</span>
                 </div>
-                <span class="error-msg">Please choose a subject.</span>
+                <div class="field">
+                  <label for="email">Email <span class="req">*</span></label>
+                  <input id="email" name="email" type="email" required autocomplete="email">
+                  <span class="error-msg">Please enter a valid email.</span>
+                </div>
+                <div class="field">
+                  <label for="phone">Phone / WhatsApp</label>
+                  <input id="phone" name="phone" type="tel" autocomplete="tel">
+                </div>
+                <div class="field field--full">
+                  <label class="consent">
+                    <input type="checkbox" name="under_18" id="under18">
+                    <span>The student is under 18</span>
+                  </label>
+                </div>
+                <div class="field" data-guardian hidden>
+                  <label for="guardian">Parent or guardian name <span class="req">*</span></label>
+                  <input id="guardian" name="guardian_name" type="text" required>
+                  <span class="error-msg">Please enter a name.</span>
+                </div>
+                <div class="field" data-guardian hidden>
+                  <label for="guardian-contact">Parent or guardian phone or email <span class="req">*</span></label>
+                  <input id="guardian-contact" name="guardian_contact" type="text" required>
+                  <span class="error-msg">Please fill this in.</span>
+                </div>
               </div>
+            </fieldset>
 
-              <div class="field field--full">
-                <label for="plan">Package <span class="req">*</span></label>
-                <select id="plan" name="package" required>
-                  <option value="">Choose…</option>
-                  <option value="starter">Starter – 4 lessons / month</option>
-                  <option value="focus">Focus – 8 lessons / month</option>
-                  <option value="exam">Exam Prep – 12 lessons / month</option>
-                  <option value="unsure">Not sure yet</option>
-                </select>
-                <span class="error-msg">Please choose a package.</span>
-              </div>
+            <!-- Step 2: diagnostic form -->
+            <fieldset class="wizard-step" data-step="2" hidden>
+              <h3>Learning needs</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="curriculum">Curriculum <span class="req">*</span></label>
+                  <select id="curriculum" name="curriculum" required>
+                    <option value="">Choose…</option>
+                    <option value="Cambridge IGCSE">Cambridge IGCSE</option>
+                    <option value="Edexcel IGCSE">Edexcel IGCSE</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <span class="error-msg">Please choose an option.</span>
+                </div>
+                <div class="field">
+                  <label for="year">School year <span class="req">*</span></label>
+                  <select id="year" name="school_year" required>
+                    <option value="">Choose…</option>
+                    <option value="Year 9">Year 9</option>
+                    <option value="Year 10">Year 10</option>
+                    <option value="Year 11">Year 11</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <span class="error-msg">Please choose an option.</span>
+                </div>
 
-              <div class="field field--full">
-                <label for="topics">Topics you find hardest <span class="req">*</span></label>
-                <textarea id="topics" name="weak_topics" required></textarea>
-                <span class="error-msg">Please add at least one topic.</span>
-              </div>
+                <div class="field field--full" data-require-one>
+                  <span class="label">Subjects <span class="req">*</span></span>
+                  <!-- TODO: keep this list the same as the subjects on services.html -->
+                  <div class="check-group">
+                    <label class="check"><input type="checkbox" name="subjects" value="Mathematics">Mathematics</label>
+                    <label class="check"><input type="checkbox" name="subjects" value="Physics">Physics</label>
+                    <label class="check"><input type="checkbox" name="subjects" value="Chemistry">Chemistry</label>
+                    <label class="check"><input type="checkbox" name="subjects" value="Biology">Biology</label>
+                    <label class="check"><input type="checkbox" name="subjects" value="English">English</label>
+                    <label class="check"><input type="checkbox" name="subjects" value="Economics">Economics</label>
+                  </div>
+                  <span class="error-msg">Please choose a subject.</span>
+                </div>
 
-              <div class="field field--full">
-                <label class="consent">
-                  <input type="checkbox" name="consent" required>
-                  <span>I agree to the <a href="policies.html" target="_blank">policies</a>. If the student is under 18, a parent or guardian agrees too.</span>
-                </label>
-                <span class="error-msg">Please agree before sending.</span>
+                <div class="field">
+                  <label for="grade">Most recent grade</label>
+                  <select id="grade" name="recent_grade">
+                    <option value="">Choose…</option>
+                    <option value="A*">A*</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D or below">D or below</option>
+                    <option value="Not sure">Not sure</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="goal">Your goal</label>
+                  <input id="goal" name="goal" type="text">
+                </div>
+                <div class="field field--full">
+                  <label for="topics">What do you need help with? <span class="req">*</span></label>
+                  <textarea id="topics" name="help_needed" required></textarea>
+                  <span class="error-msg">Please fill this in.</span>
+                </div>
+                <div class="field field--full">
+                  <label for="times">Preferred days and times <span class="req">*</span></label>
+                  <input id="times" name="preferred_times" type="text" required>
+                  <span class="error-msg">Please fill this in.</span>
+                </div>
               </div>
+            </fieldset>
 
-              <div class="field--full">
-                <button type="submit" class="btn btn--gold" style="width:100%">Send</button>
+            <!-- Step 3: policy review -->
+            <fieldset class="wizard-step" data-step="3" hidden>
+              <h3>Read the policies</h3>
+              <ul class="checklist">
+                <li>Keep a monthly attendance rate of at least <strong>80%</strong>.</li>
+                <li><strong>Approved absence:</strong> tell your tutor at least 24 hours before the lesson and complete the Hope Education Absence Form. Maximum 2 per month.</li>
+                <li>From the 2nd unapproved absence, missed lessons are not rescheduled.</li>
+                <li>Packages are paid monthly in advance to Hope Education.</li>
+              </ul>
+              <p>Read the full <a href="policies.html" target="_blank">policies</a>.</p>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label class="consent">
+                    <input type="checkbox" name="policy_agreed" required>
+                    <span>I have read and agree to the policies.</span>
+                  </label>
+                  <span class="error-msg">Please agree to continue.</span>
+                </div>
+                <div class="field field--full" data-guardian hidden>
+                  <label class="consent">
+                    <input type="checkbox" name="guardian_agreed" required>
+                    <span>My parent or guardian has read and agrees to the policies.</span>
+                  </label>
+                  <span class="error-msg">Please agree to continue.</span>
+                </div>
               </div>
+            </fieldset>
+
+            <!-- Step 4: package -->
+            <fieldset class="wizard-step" data-step="4" hidden>
+              <h3>Choose a package</h3>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label for="plan">Package <span class="req">*</span></label>
+                  <select id="plan" name="package" required>
+                    <option value="">Choose…</option>
+                    <option value="starter">Starter – 4 lessons / month</option>
+                    <option value="focus">Focus – 8 lessons / month</option>
+                    <option value="exam">Exam Prep – 12 lessons / month</option>
+                    <option value="unsure">Not sure yet</option>
+                  </select>
+                  <span class="error-msg">Please choose a package.</span>
+                </div>
+              </div>
+              <p class="note">We will confirm your tutor, timetable and price before you pay.</p>
+            </fieldset>
+
+            <div class="wizard-nav">
+              <button type="button" class="btn btn--outline" data-back hidden>Back</button>
+              <button type="button" class="btn btn--gold" data-next>Next</button>
+              <button type="submit" class="btn btn--gold" data-send hidden>Send</button>
             </div>
           </form>
 
           <div class="form-success">
             <span class="star"></span>
-            <h2>Thank you!</h2>
-            <p>We will contact you soon.</p>
+            <h2>Request sent!</h2>
+            <p>Next, we will confirm your tutor and send payment details. Your Student ID is given after your first payment is verified.</p>
           </div>
         </div>
       </div>
     </section>
-  </main>
+</main>
 
   <footer class="site-footer">
     <div class="container">
@@ -170,5 +277,6 @@
 
   <script src="js/translations.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/enrol.js"></script>
 </body>
 </html>
