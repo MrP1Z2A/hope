@@ -92,6 +92,36 @@
   }
   receiptInput.addEventListener("change", checkReceipt);
 
+  /* ---------- QR code and amount set by admins (admin portal → Website) ---------- */
+  var qrImg = form.querySelector(".pay-qr img");
+  var qrMissing = form.querySelector(".pay-qr-missing");
+  var amountRow = form.querySelector(".pay-amount");
+  var settings = {};
+
+  function showQr(src, fallback) {
+    qrImg.onload = function () { qrImg.hidden = false; qrMissing.hidden = true; };
+    qrImg.onerror = function () { if (fallback) showQr(fallback, null); };
+    qrImg.src = src;
+  }
+
+  function updateAmount() {
+    var price = settings["price_" + form.elements["package"].value];
+    amountRow.querySelector("[data-pay-amount]").textContent = price || "";
+    amountRow.hidden = !price;
+  }
+  form.elements["package"].addEventListener("change", updateAmount);
+
+  if (window.hopeSettings) {
+    window.hopeSettings().then(function (s) {
+      settings = s;
+      updateAmount();
+      if (s.payment_qr_version) showQr(window.hopeQrUrl(s.payment_qr_version), "images/payment-qr.png");
+      else showQr("images/payment-qr.png", null);
+    });
+  } else {
+    showQr("images/payment-qr.png", null);
+  }
+
   /* ---------- Checking answers ---------- */
   function validateField(field) {
     if (field.closest("[hidden]")) return true;

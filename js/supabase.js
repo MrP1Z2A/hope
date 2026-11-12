@@ -9,6 +9,30 @@ window.HOPE_SUPABASE = {
   publishableKey: "sb_publishable__KywYShskZGpVOukrRH5wA_uAHnxq0D"
 };
 
+/* Website settings that admins change in the admin portal (prices, QR code).
+   Returns a Promise of { key: value }. Fetched once per page. */
+var hopeSettingsPromise = null;
+window.hopeSettings = function () {
+  if (!hopeSettingsPromise) {
+    var cfg = window.HOPE_SUPABASE;
+    hopeSettingsPromise = fetch(cfg.url + "/rest/v1/site_settings?select=key,value", {
+      headers: { apikey: cfg.publishableKey }
+    }).then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (rows) {
+        var s = {};
+        rows.forEach(function (r) { s[r.key] = r.value; });
+        return s;
+      })
+      .catch(function () { return {}; });
+  }
+  return hopeSettingsPromise;
+};
+
+/* Public address of the payment QR code uploaded by an admin. */
+window.hopeQrUrl = function (version) {
+  return window.HOPE_SUPABASE.url + "/storage/v1/object/public/site-assets/payment-qr?v=" + encodeURIComponent(version);
+};
+
 /* Message shown when saving fails, in the visitor's language. */
 window.hopeSaveError = function () {
   alert(document.documentElement.lang === "my"

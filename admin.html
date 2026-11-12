@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | Hope Online Tuition School</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-page">
+  <!-- Interface switcher: Website / Student / Teacher / Admin -->
+  <nav class="portal-rail" aria-label="Switch interface">
+      <a href="index.html" class="rail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span class="rail-label">Website</span></a>
+      <span class="rail-item is-soon" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg><span class="rail-label">Student</span><small class="rail-soon">Soon</small></span>
+      <span class="rail-item is-soon" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span class="rail-label">Teacher</span><small class="rail-soon">Soon</small></span>
+      <a href="admin.html" class="rail-item active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="rail-label">Admin</span></a>
+  </nav>
+
+  <main class="admin-main">
+    <!-- ===== Sign in ===== -->
+    <section id="login-view" class="admin-login" hidden>
+      <div class="card login-card">
+        <div class="login-logo"><img src="images/logo.jpg" alt="Hope"></div>
+        <h1>Admin sign in</h1>
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="admin-id">Admin ID</label>
+            <input id="admin-id" name="admin_id" type="text" autocomplete="username" autocapitalize="characters" required>
+          </div>
+          <div class="field">
+            <label for="admin-pw">Password</label>
+            <input id="admin-pw" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <p class="admin-error" id="login-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn--gold" style="width:100%">Sign in</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== Dashboard ===== -->
+    <section id="dash-view" hidden>
+      <header class="admin-top">
+        <div>
+          <span class="eyebrow">Admin portal</span>
+          <h1 id="admin-hello">Admin</h1>
+        </div>
+        <div class="admin-top-actions">
+          <span class="admin-who" id="admin-who"></span>
+          <button type="button" class="btn btn--outline btn--sm" id="sign-out">Sign out</button>
+        </div>
+      </header>
+
+      <nav class="admin-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="enrolments" aria-selected="true">Enrolments <span class="tab-count" id="pending-count" hidden></span></button>
+        <button type="button" role="tab" data-tab="messages" aria-selected="false">Messages <span class="tab-count" id="message-count" hidden></span></button>
+        <button type="button" role="tab" data-tab="students" aria-selected="false">Students</button>
+        <button type="button" role="tab" data-tab="website" aria-selected="false">Website</button>
+      </nav>
+
+      <p class="admin-toast" id="toast" role="status" hidden></p>
+
+      <!-- Enrolments -->
+      <div class="admin-panel" data-panel="enrolments">
+        <div class="panel-bar">
+          <label for="enrol-filter">Show</label>
+          <select id="enrol-filter">
+            <option value="Payment Pending">Payment Pending</option>
+            <option value="New request">New request</option>
+            <option value="Active">Active</option>
+            <option value="Payment Failed">Payment Failed</option>
+            <option value="Waitlisted">Waitlisted</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="">All</option>
+          </select>
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div class="table-wrap" id="enrol-list"></div>
+      </div>
+
+      <!-- Messages -->
+      <div class="admin-panel" data-panel="messages" hidden>
+        <div class="panel-bar">
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div id="message-list" class="message-list"></div>
+      </div>
+
+      <!-- Students -->
+      <div class="admin-panel" data-panel="students" hidden>
+        <div class="panel-bar">
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div class="table-wrap" id="student-list"></div>
+      </div>
+
+      <!-- Website settings -->
+      <div class="admin-panel" data-panel="website" hidden>
+        <div class="grid grid-2 admin-website">
+          <form class="card" id="prices-form">
+            <h3>Package prices</h3>
+            <p class="small-note">Shown on the Pricing page and at the payment step. Leave empty to hide.</p>
+            <div class="field"><label for="price-starter">Starter (4 lessons / month)</label><input id="price-starter" name="price_starter" type="text" maxlength="60" placeholder="120,000 Ks"></div>
+            <div class="field"><label for="price-focus">Focus (8 lessons / month)</label><input id="price-focus" name="price_focus" type="text" maxlength="60"></div>
+            <div class="field"><label for="price-exam">Exam Prep (12 lessons / month)</label><input id="price-exam" name="price_exam" type="text" maxlength="60"></div>
+            <button type="submit" class="btn btn--gold">Save prices</button>
+          </form>
+
+          <form class="card" id="qr-form">
+            <h3>Payment QR code</h3>
+            <p class="small-note">Shown at the payment step of the Enrol page. PNG, JPG or WEBP, up to 2 MB.</p>
+            <div class="qr-preview">
+              <img id="qr-current" alt="Current payment QR code" hidden>
+              <p id="qr-none" class="small-note">No QR code uploaded yet.</p>
+            </div>
+            <div class="field"><label for="qr-file">New QR code</label><input id="qr-file" type="file" accept="image/png,image/jpeg,image/webp" required></div>
+            <button type="submit" class="btn btn--gold">Upload QR code</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Enrolment details -->
+  <dialog id="enrol-dialog" class="admin-dialog">
+    <div class="dialog-head">
+      <h2 id="dlg-title">Enrolment</h2>
+      <button type="button" class="dialog-close" data-close aria-label="Close">×</button>
+    </div>
+    <div id="dlg-body" class="dialog-body"></div>
+  </dialog>
+
+  <script src="js/supabase.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

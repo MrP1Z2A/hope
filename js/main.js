@@ -101,6 +101,18 @@
     items.forEach(function (el) { el.classList.add("visible"); });
   }
 
+  // Package prices set by admins (admin portal → Website). Hidden when empty.
+  var priceSlots = document.querySelectorAll("[data-price]");
+  if (priceSlots.length && window.hopeSettings) {
+    window.hopeSettings().then(function (s) {
+      priceSlots.forEach(function (el) {
+        var price = s["price_" + el.getAttribute("data-price")];
+        el.textContent = price || "";
+        el.hidden = !price;
+      });
+    });
+  }
+
   // Pre-select the package when arriving from the pricing page (enrol.html?plan=focus)
   var planSelect = document.getElementById("plan");
   var planParam = new URLSearchParams(location.search).get("plan");

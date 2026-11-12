@@ -1,0 +1,500 @@
+/* Hope Education — admin portal (admin.html)
+
+   Admins are kept in the Supabase "admins" table (see supabase/003_admin.sql).
+   Signing in calls admin_login(), which checks the hashed password and returns a
+   12-hour session token. Every request sends that token in the "x-admin-token"
+   header, and the database rules only allow admin actions for a valid token.
+
+   Security note: all student-entered data is shown with textContent only, never
+   as HTML, so nothing typed into a form can run code in the admin's browser. */
+(function () {
+  "use strict";
+
+  var CFG = window.HOPE_SUPABASE;
+  var SESSION_KEY = "hope-admin-session";
+  var STATUSES = ["New request", "Payment Pending", "Active", "Payment Failed", "Waitlisted", "Cancelled"];
+  var PACKAGES = { starter: "Starter – 4 lessons / month", focus: "Focus – 8 lessons / month",
+                   exam: "Exam Prep – 12 lessons / month", unsure: "Not sure yet" };
+
+  var session = null;
+  var me = null;
+  var currentTab = "enrolments";
+
+  /* ---------- Small helpers ---------- */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+
+  // Build elements safely: text is always inserted as text, never HTML.
+  function h(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) return;
+      if (k === "class") e.className = v;
+      else if (k === "text") e.textContent = v;
+      else if (k.indexOf("on") === 0) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? "" : v);
+    });
+    (kids || []).forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
+    });
+    return e;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) + " " +
+           d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  function yesNo(v) { return v ? "Yes" : "No"; }
+  function orDash(v) { return (v === null || v === undefined || v === "") ? "—" : String(v); }
+
+  var toastTimer;
+  function toast(msg, isError) {
+    var t = $("#toast");
+    t.textContent = msg;
+    t.classList.toggle("is-error", !!isError);
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, isError ? 8000 : 4000);
+  }
+  function fail(err) {
+    console.error(err);
+    if (String(err && err.message) !== "signed out") toast("Something went wrong: " + (err && err.message || err), true);
+  }
+
+  /* ---------- Session ---------- */
+  function saveSession(s) {
+    session = s;
+    try { if (s) sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); else sessionStorage.removeItem(SESSION_KEY); }
+    catch (e) { /* storage unavailable: session lasts until the page closes */ }
+    return s;
+  }
+  function readSession() {
+    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; }
+  }
+
+  /* Call a database function without a session (used for signing in). */
+  function rpcPublic(name, args) {
+    return fetch(CFG.url + "/rest/v1/rpc/" + name, {
+      method: "POST",
+      headers: { apikey: CFG.publishableKey, "Content-Type": "application/json" },
+      body: JSON.stringify(args || {})
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) throw new Error(j && j.message || "Request failed");
+        return j;
+      });
+    });
+  }
+
+  function ensureFresh() {
+    if (!session) return Promise.reject(new Error("signed out"));
+    if (new Date(session.expires_at).getTime() > Date.now()) return Promise.resolve();
+    signOutLocal("Your session has ended. Please sign in again.");
+    return Promise.reject(new Error("signed out"));
+  }
+
+  /* Request to Supabase as the signed-in admin. */
+  function api(path, opts) {
+    opts = opts || {};
+    return ensureFresh().then(function () {
+      var headers = { apikey: CFG.publishableKey, "x-admin-token": session.token };
+      Object.keys(opts.headers || {}).forEach(function (k) { headers[k] = opts.headers[k]; });
+      return fetch(CFG.url + path, { method: opts.method || "GET", headers: headers, body: opts.body });
+    }).then(function (r) {
+      if (r.status === 401) { signOutLocal("Your session has ended. Please sign in again."); throw new Error("signed out"); }
+      return r.text().then(function (t) {
+        if (!r.ok) {
+          var msg = t;
+          try { msg = JSON.parse(t).message || t; } catch (e) { /* plain text */ }
+          throw new Error(msg);
+        }
+        try { return t ? JSON.parse(t) : null; } catch (e) { return t; }
+      });
+    });
+  }
+  function rest(path, method, body, prefer) {
+    var headers = { "Content-Type": "application/json" };
+    if (prefer) headers.Prefer = prefer;
+    return api("/rest/v1/" + path, { method: method || "GET", headers: headers, body: body ? JSON.stringify(body) : undefined });
+  }
+  /* PATCH one row and make sure it really changed (the rules may silently allow 0 rows). */
+  function updateRow(table, id, changes) {
+    return rest(table + "?id=eq." + encodeURIComponent(id), "PATCH", changes, "return=representation")
+      .then(function (rows) {
+        if (!rows || !rows.length) throw new Error("Not saved — you may not have permission.");
+        return rows[0];
+      });
+  }
+
+  /* ---------- Sign in / out ---------- */
+  function showLogin(message) {
+    $("#dash-view").hidden = true;
+    $("#login-view").hidden = false;
+    var err = $("#login-error");
+    err.textContent = message || "";
+    err.hidden = !message;
+  }
+
+  function signOutLocal(message) {
+    saveSession(null);
+    me = null;
+    showLogin(message);
+  }
+
+  /* Check the saved session is still valid and get the admin's name. */
+  function loadMe() {
+    return rest("rpc/admin_me", "POST", {}).then(function (info) {
+      if (!info || !info.admin_id) {
+        signOutLocal("Your session has ended. Please sign in again.");
+        throw new Error("signed out");
+      }
+      me = info;
+      showDashboard();
+    });
+  }
+
+  $("#login-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var id = $("#admin-id").value.trim();
+    var pw = $("#admin-pw").value;
+    var btn = ev.target.querySelector("button[type=submit]");
+    if (!/^[A-Za-z0-9_-]{2,30}$/.test(id) || !pw) { showLogin("Enter your Admin ID and password."); return; }
+    btn.disabled = true;
+    rpcPublic("admin_login", { p_admin_id: id, p_password: pw })
+      .then(function (res) {
+        if (!res || res.error || !res.token) { showLogin((res && res.error) || "Wrong Admin ID or password."); return; }
+        saveSession({ token: res.token, expires_at: res.expires_at });
+        me = { admin_id: res.admin_id, admin_name: res.admin_name };
+        $("#admin-pw").value = "";
+        showDashboard();
+      })
+      .catch(function (err) { console.error(err); showLogin("Could not sign in. Please try again."); })
+      .then(function () { btn.disabled = false; });
+  });
+
+  $("#sign-out").addEventListener("click", function () {
+    var token = session && session.token;
+    signOutLocal();
+    if (!token) return;
+    // End the session on the server too, so the old token stops working.
+    fetch(CFG.url + "/rest/v1/rpc/admin_logout", {
+      method: "POST",
+      headers: { apikey: CFG.publishableKey, "x-admin-token": token, "Content-Type": "application/json" },
+      body: "{}"
+    }).catch(function () { /* it also expires on its own after 12 hours */ });
+  });
+
+  /* ---------- Dashboard ---------- */
+  function showDashboard() {
+    $("#login-view").hidden = true;
+    $("#dash-view").hidden = false;
+    $("#admin-hello").textContent = "Hello, " + me.admin_name;
+    $("#admin-who").textContent = "Admin ID: " + me.admin_id;
+    switchTab(currentTab);
+    refreshCounts();
+  }
+
+  function switchTab(name) {
+    currentTab = name;
+    document.querySelectorAll(".admin-tabs [data-tab]").forEach(function (b) {
+      b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false");
+    });
+    document.querySelectorAll(".admin-panel").forEach(function (p) { p.hidden = p.dataset.panel !== name; });
+    loaders[name]();
+  }
+
+  document.querySelectorAll(".admin-tabs [data-tab]").forEach(function (b) {
+    b.addEventListener("click", function () { switchTab(b.dataset.tab); });
+  });
+  document.querySelectorAll("[data-refresh]").forEach(function (b) {
+    b.addEventListener("click", function () { loaders[currentTab](); refreshCounts(); });
+  });
+
+  function refreshCounts() {
+    Promise.all([
+      rest("enrolments?select=id&status=eq.Payment%20Pending"),
+      rest("contact_messages?select=id&handled=is.false")
+    ]).then(function (res) {
+      setCount("#pending-count", res[0].length);
+      setCount("#message-count", res[1].length);
+    }).catch(fail);
+  }
+  function setCount(sel, n) { var el = $(sel); el.textContent = n; el.hidden = !n; }
+
+  function statusPill(status) {
+    return h("span", { class: "status-pill status-" + status.toLowerCase().replace(/\s+/g, "-"), text: status });
+  }
+
+  function emptyState(text) { return h("p", { class: "empty-state", text: text }); }
+
+  /* ---------- Enrolments ---------- */
+  function loadEnrolments() {
+    var filter = $("#enrol-filter").value;
+    var q = "enrolments?select=id,created_at,student_name,email,package,status,student_id&order=created_at.desc";
+    if (filter) q += "&status=eq." + encodeURIComponent(filter);
+    var box = $("#enrol-list");
+    box.replaceChildren(emptyState("Loading…"));
+    rest(q).then(function (rows) {
+      if (!rows.length) { box.replaceChildren(emptyState("No enrolments here.")); return; }
+      var tbody = h("tbody", null, rows.map(function (r) {
+        return h("tr", { tabindex: "0", onclick: function () { openEnrolment(r.id); },
+                         onkeydown: function (e) { if (e.key === "Enter") openEnrolment(r.id); } }, [
+          h("td", { text: "#" + r.id }),
+          h("td", { text: fmtDate(r.created_at) }),
+          h("td", null, [h("strong", { text: r.student_name }), h("br"), h("small", { text: r.email })]),
+          h("td", { text: PACKAGES[r.package] || orDash(r.package) }),
+          h("td", null, [statusPill(r.status)]),
+          h("td", { text: r.student_id ? String(r.student_id) : "—" })
+        ]);
+      }));
+      box.replaceChildren(h("table", { class: "admin-table" }, [
+        h("thead", null, [h("tr", null, ["No.", "Sent", "Student", "Package", "Status", "Student ID"].map(function (t) { return h("th", { text: t }); }))]),
+        tbody
+      ]));
+    }).catch(fail);
+  }
+  $("#enrol-filter").addEventListener("change", loadEnrolments);
+
+  var dialog = $("#enrol-dialog");
+  dialog.querySelector("[data-close]").addEventListener("click", function () { dialog.close(); });
+
+  function detailList(title, pairs) {
+    return h("section", { class: "detail-block" }, [
+      h("h3", { text: title }),
+      h("dl", null, pairs.reduce(function (acc, p) {
+        acc.push(h("dt", { text: p[0] }));
+        acc.push(h("dd", { text: orDash(p[1]) }));
+        return acc;
+      }, []))
+    ]);
+  }
+
+  function openEnrolment(id) {
+    var body = $("#dlg-body");
+    $("#dlg-title").textContent = "Enrolment #" + id;
+    body.replaceChildren(emptyState("Loading…"));
+    if (!dialog.open) dialog.showModal();
+
+    rest("enrolments?select=*&id=eq." + encodeURIComponent(id)).then(function (rows) {
+      var r = rows[0];
+      if (!r) { body.replaceChildren(emptyState("Not found.")); return; }
+      $("#dlg-title").textContent = r.student_name;
+
+      var head = h("div", { class: "detail-head" }, [
+        statusPill(r.status),
+        r.student_id ? h("span", { class: "student-id-badge", text: "Student ID " + r.student_id }) : null,
+        h("span", { class: "small-note", text: "Enrolment #" + r.id + " · sent " + fmtDate(r.created_at) })
+      ]);
+
+      // Receipt
+      var receiptBox = h("div", { class: "receipt-box" }, [emptyState(r.receipt_path ? "Loading receipt…" : "No receipt uploaded.")]);
+      if (r.receipt_path) {
+        api("/storage/v1/object/sign/payment-receipts/" + r.receipt_path.split("/").map(encodeURIComponent).join("/"), {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 600 })
+        }).then(function (res) {
+          var url = CFG.url + "/storage/v1" + (res.signedURL || res.signedUrl);
+          var isPdf = /\.pdf$/i.test(r.receipt_path);
+          receiptBox.replaceChildren(
+            isPdf ? h("p", null, [h("a", { href: url, target: "_blank", rel: "noopener", class: "btn btn--outline btn--sm", text: "Open receipt (PDF)" })])
+                  : h("a", { href: url, target: "_blank", rel: "noopener", title: "Open full size" }, [h("img", { src: url, alt: "Payment receipt" })]),
+            h("p", { class: "small-note", text: "Link works for 10 minutes. Close and reopen to refresh." })
+          );
+        }).catch(function (err) {
+          receiptBox.replaceChildren(emptyState("Could not load receipt: " + err.message));
+        });
+      }
+
+      // Actions
+      var actions = h("section", { class: "detail-block detail-actions" }, [h("h3", { text: "Actions" })]);
+      if (r.status !== "Active") {
+        actions.appendChild(h("div", { class: "btn-row" }, [
+          h("button", { type: "button", class: "btn btn--gold", text: "Accept payment and enrol", onclick: function (e) {
+            if (!confirm("Accept the payment and enrol " + r.student_name + "?\nThis gives them a permanent Student ID.")) return;
+            e.target.disabled = true;
+            rest("rpc/activate_enrolment", "POST", { p_enrolment_id: r.id }).then(function (studentId) {
+              toast(r.student_name + " is enrolled. Student ID: " + studentId);
+              openEnrolment(r.id); loadEnrolments(); refreshCounts();
+            }).catch(function (err) { e.target.disabled = false; fail(err); });
+          } }),
+          (r.status === "Payment Pending" || r.status === "New request") ?
+            h("button", { type: "button", class: "btn btn--outline", text: "Reject payment", onclick: function (e) {
+              if (!confirm("Reject this payment? The enrolment will be marked Payment Failed.")) return;
+              e.target.disabled = true;
+              updateRow("enrolments", r.id, { status: "Payment Failed" }).then(function () {
+                toast("Payment rejected.");
+                openEnrolment(r.id); loadEnrolments(); refreshCounts();
+              }).catch(function (err) { e.target.disabled = false; fail(err); });
+            } }) : null
+        ]));
+      }
+
+      // Status (Active can only be set with "Accept payment and enrol", which issues the Student ID)
+      var statusSelect = h("select", { id: "dlg-status" }, STATUSES.filter(function (s) {
+        return s !== "Active" || r.status === "Active";
+      }).map(function (s) { return h("option", { value: s, selected: s === r.status, text: s }); }));
+      actions.appendChild(h("div", { class: "field" }, [
+        h("label", { for: "dlg-status", text: "Status" }),
+        h("div", { class: "inline-row" }, [statusSelect,
+          h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Save status", onclick: function () {
+            updateRow("enrolments", r.id, { status: statusSelect.value }).then(function () {
+              toast("Status saved."); openEnrolment(r.id); loadEnrolments(); refreshCounts();
+            }).catch(fail);
+          } })])
+      ]));
+
+      var notes = h("textarea", { id: "dlg-notes", rows: "3" });
+      notes.value = r.admin_notes || "";
+      actions.appendChild(h("div", { class: "field" }, [
+        h("label", { for: "dlg-notes", text: "Admin notes (only admins see these)" }),
+        notes,
+        h("div", null, [h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Save notes", onclick: function () {
+          updateRow("enrolments", r.id, { admin_notes: notes.value.trim() || null })
+            .then(function () { toast("Notes saved."); }).catch(fail);
+        } })])
+      ]));
+
+      actions.appendChild(h("div", { class: "danger-zone" }, [
+        h("button", { type: "button", class: "btn-link-danger", text: "Delete this enrolment", onclick: function () {
+          if (!confirm("Delete enrolment #" + r.id + " for " + r.student_name + "? This cannot be undone.")) return;
+          rest("enrolments?id=eq." + r.id, "DELETE", null, "return=representation").then(function (rows) {
+            if (!rows || !rows.length) throw new Error("Not deleted — you may not have permission.");
+            toast("Enrolment deleted."); dialog.close(); loadEnrolments(); refreshCounts();
+          }).catch(fail);
+        } })
+      ]));
+
+      body.replaceChildren(
+        head,
+        h("section", { class: "detail-block" }, [h("h3", { text: "Payment receipt" }), receiptBox,
+          h("dl", null, [
+            h("dt", { text: "Transaction number" }), h("dd", { text: orDash(r.payment_reference) }),
+            h("dt", { text: "Payment sent" }), h("dd", { text: fmtDate(r.payment_submitted_at) }),
+            h("dt", { text: "Payment verified" }), h("dd", { text: fmtDate(r.payment_verified_at) })
+          ])]),
+        actions,
+        detailList("Student", [
+          ["Name", r.student_name], ["Email", r.email], ["Phone / WhatsApp", r.phone],
+          ["Under 18", yesNo(r.under_18)], ["Parent or guardian", r.guardian_name], ["Parent contact", r.guardian_contact]
+        ]),
+        detailList("Learning needs", [
+          ["Curriculum", r.curriculum], ["School year", r.school_year], ["Subjects", (r.subjects || []).join(", ")],
+          ["Most recent grade", r.recent_grade], ["Goal", r.goal], ["Needs help with", r.help_needed],
+          ["Preferred times", r.preferred_times]
+        ]),
+        detailList("Package and policies", [
+          ["Package", PACKAGES[r.package] || r.package], ["Policy version", r.policy_version],
+          ["Agreed to policies", yesNo(r.policy_agreed)], ["Parent agreed", r.under_18 ? yesNo(r.guardian_agreed) : "—"],
+          ["Agreed at", fmtDate(r.policy_accepted_at)], ["Website language", r.language === "my" ? "Burmese" : "English"]
+        ])
+      );
+    }).catch(fail);
+  }
+
+  /* ---------- Messages ---------- */
+  function loadMessages() {
+    var box = $("#message-list");
+    box.replaceChildren(emptyState("Loading…"));
+    rest("contact_messages?select=*&order=handled.asc,created_at.desc").then(function (rows) {
+      if (!rows.length) { box.replaceChildren(emptyState("No messages yet.")); return; }
+      box.replaceChildren.apply(box, rows.map(function (m) {
+        var check = h("input", { type: "checkbox", checked: m.handled });
+        check.addEventListener("change", function () {
+          updateRow("contact_messages", m.id, { handled: check.checked })
+            .then(function () { card.classList.toggle("is-handled", check.checked); refreshCounts(); })
+            .catch(function (err) { check.checked = !check.checked; fail(err); });
+        });
+        var card = h("article", { class: "card message-card" + (m.handled ? " is-handled" : "") }, [
+          h("div", { class: "message-head" }, [
+            h("strong", { text: m.name }),
+            h("a", { href: "mailto:" + encodeURIComponent(m.email).replace(/%40/g, "@"), text: m.email }),
+            h("span", { class: "small-note", text: fmtDate(m.created_at) })
+          ]),
+          h("p", { class: "message-text", text: m.message }),
+          h("label", { class: "consent" }, [check, h("span", { text: "Handled" })])
+        ]);
+        return card;
+      }));
+    }).catch(fail);
+  }
+
+  /* ---------- Students ---------- */
+  function loadStudents() {
+    var box = $("#student-list");
+    box.replaceChildren(emptyState("Loading…"));
+    rest("students?select=*&order=student_id.asc").then(function (rows) {
+      if (!rows.length) { box.replaceChildren(emptyState("No students yet. Students appear here after their payment is accepted.")); return; }
+      box.replaceChildren(h("table", { class: "admin-table" }, [
+        h("thead", null, [h("tr", null, ["Student ID", "Name", "Email", "Since"].map(function (t) { return h("th", { text: t }); }))]),
+        h("tbody", null, rows.map(function (s) {
+          return h("tr", null, [h("td", null, [h("strong", { text: String(s.student_id) })]), h("td", { text: s.student_name }),
+                                h("td", { text: s.email }), h("td", { text: fmtDate(s.created_at) })]);
+        }))
+      ]));
+    }).catch(fail);
+  }
+
+  /* ---------- Website settings ---------- */
+  function loadWebsite() {
+    rest("site_settings?select=key,value").then(function (rows) {
+      var s = {};
+      rows.forEach(function (r) { s[r.key] = r.value; });
+      ["starter", "focus", "exam"].forEach(function (p) { $("#price-" + p).value = s["price_" + p] || ""; });
+      var img = $("#qr-current");
+      if (s.payment_qr_version) {
+        img.src = window.hopeQrUrl(s.payment_qr_version);
+        img.hidden = false; $("#qr-none").hidden = true;
+      } else {
+        img.hidden = true; $("#qr-none").hidden = false;
+      }
+    }).catch(fail);
+  }
+
+  function saveSettings(pairs) {
+    var now = new Date().toISOString();
+    return rest("site_settings?on_conflict=key", "POST", pairs.map(function (p) {
+      return { key: p[0], value: p[1], updated_at: now };
+    }), "resolution=merge-duplicates,return=representation").then(function (rows) {
+      if (!rows || rows.length !== pairs.length) throw new Error("Not saved — you may not have permission.");
+    });
+  }
+
+  $("#prices-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var pairs = ["starter", "focus", "exam"].map(function (p) {
+      return ["price_" + p, $("#price-" + p).value.trim() || null];
+    });
+    saveSettings(pairs).then(function () { toast("Prices saved. The website now shows them."); }).catch(fail);
+  });
+
+  $("#qr-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var file = $("#qr-file").files[0];
+    if (!file) { toast("Choose an image first.", true); return; }
+    if (file.size > 2 * 1024 * 1024) { toast("The image must be under 2 MB.", true); return; }
+    if (["image/png", "image/jpeg", "image/webp"].indexOf(file.type) === -1) { toast("Use a PNG, JPG or WEBP image.", true); return; }
+    var btn = ev.target.querySelector("button[type=submit]");
+    btn.disabled = true;
+    api("/storage/v1/object/site-assets/payment-qr", {
+      method: "POST", headers: { "Content-Type": file.type, "x-upsert": "true", "Cache-Control": "max-age=60" }, body: file
+    }).then(function () {
+      return saveSettings([["payment_qr_version", String(Date.now())]]);
+    }).then(function () {
+      toast("QR code uploaded. The Enrol page now shows it.");
+      $("#qr-file").value = "";
+      loadWebsite();
+    }).catch(fail).then(function () { btn.disabled = false; });
+  });
+
+  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, website: loadWebsite };
+
+  /* ---------- Start ---------- */
+  session = readSession();
+  if (session) {
+    loadMe().catch(function (err) { if (String(err.message) !== "signed out") signOutLocal("Please sign in again."); });
+  } else {
+    showLogin();
+  }
+})();

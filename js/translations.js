@@ -267,5 +267,13 @@ window.HOPE_MY = {
   "Photo, screenshot or PDF, up to 5 MB.": "ဓာတ်ပုံ၊ စခရင်ရှော့ သို့မဟုတ် PDF၊ 5 MB အထိ။",
   "Please upload an image or PDF under 5 MB.": "5 MB အောက် ဓာတ်ပုံ သို့မဟုတ် PDF တင်ပါ။",
   "Transaction number": "ငွေလွှဲ နံပါတ်",
-  "We will check your payment and confirm your tutor. Your Student ID is given after your payment is verified.": "သင့်ငွေပေးချေမှုကို စစ်ဆေးပြီး ဆရာကို အတည်ပြုပေးပါမည်။ ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ကို ပေးပါမည်။"
+  "We will check your payment and confirm your tutor. Your Student ID is given after your payment is verified.": "သင့်ငွေပေးချေမှုကို စစ်ဆေးပြီး ဆရာကို အတည်ပြုပေးပါမည်။ ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ကို ပေးပါမည်။",
+
+  /* ---------- Interface sidebar and admin prices ---------- */
+  "Website": "ဝက်ဘ်ဆိုက်",
+  "Student": "ကျောင်းသား",
+  "Teacher": "ဆရာ",
+  "Admin": "စီမံသူ",
+  "Soon": "မကြာမီ",
+  "Amount to pay": "ပေးချေရမည့် ပမာဏ"
 };

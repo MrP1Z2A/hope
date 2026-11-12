@@ -12,6 +12,13 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!-- Interface switcher: Website / Student / Teacher / Admin -->
+  <nav class="portal-rail" aria-label="Switch interface">
+      <a href="index.html" class="rail-item active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span class="rail-label">Website</span></a>
+      <span class="rail-item is-soon" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg><span class="rail-label">Student</span><small class="rail-soon">Soon</small></span>
+      <span class="rail-item is-soon" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span class="rail-label">Teacher</span><small class="rail-soon">Soon</small></span>
+      <a href="admin.html" class="rail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="rail-label">Admin</span></a>
+  </nav>
 
   <header class="site-header">
     <div class="container nav">
@@ -219,11 +226,12 @@
             <fieldset class="wizard-step" data-step="5" hidden>
               <h3>Pay online</h3>
               <div class="pay-qr">
-                <!-- Save your payment wallet's QR code as images/payment-qr.png -->
-                <img src="images/payment-qr.png" alt="Payment QR code" width="240" height="240"
-                     onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-                <p class="pay-qr-missing" hidden>Payment QR code coming soon.</p>
+                <!-- The QR code is uploaded by an admin (admin portal → Website).
+                     If none is uploaded, images/payment-qr.png is used when present. -->
+                <img alt="Payment QR code" width="240" height="240" hidden>
+                <p class="pay-qr-missing">Payment QR code coming soon.</p>
               </div>
+              <p class="pay-amount" hidden><span>Amount to pay</span> <strong data-pay-amount></strong></p>
               <p class="center">Scan the QR code with your payment app and pay for your package.</p>
               <p class="small-note center">Not sure of the price? <a href="contact.html" target="_blank">Contact us</a> before paying.</p>
 
