@@ -1,7 +1,7 @@
 /* Hope Education — admin portal (admin.html)
 
    Admins are kept in the Supabase "admins" table (see supabase/003_admin.sql).
-   Signing in happens on login.html; this page sends you there if you are not signed in.
+   Signing in happens on login.html (Faculty); this page sends you there if you are not signed in.
    Signing in calls admin_login(), which checks the hashed password and returns a
    12-hour session token. Every request sends that token in the "x-admin-token"
    header, and the database rules only allow admin actions for a valid token.
@@ -118,7 +118,7 @@
 
   /* ---------- Sign in / out (signing in happens on login.html) ---------- */
   function goToLogin(ended) {
-    location.replace("login.html?role=admin" + (ended ? "&ended=1" : ""));
+    location.replace("login.html?role=faculty" + (ended ? "&ended=1" : ""));
   }
 
   function signOutLocal(message) {

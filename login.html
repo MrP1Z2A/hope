@@ -24,18 +24,15 @@
         <a href="index.html" class="login-logo" aria-label="Hope Online Tuition School home"><img src="images/logo.jpg" alt="Hope"></a>
         <h1>Log in</h1>
 
-        <!-- Who is signing in -->
+        <!-- Who is signing in: students, or faculty (admins and, later, teachers) -->
         <div class="role-tabs" role="radiogroup" aria-label="I am a">
           <button type="button" role="radio" data-role="student" aria-checked="true">Student</button>
-          <button type="button" role="radio" data-role="teacher" aria-checked="false">Teacher</button>
-          <button type="button" role="radio" data-role="admin" aria-checked="false">Admin</button>
+          <button type="button" role="radio" data-role="faculty" aria-checked="false">Faculty</button>
         </div>
-
-        <p class="portal-hint" id="teacher-note" hidden>Teacher accounts are coming soon.</p>
 
         <form id="login-form" novalidate>
           <div class="field">
-            <label for="login-id"><span data-for-role="student">Student ID</span><span data-for-role="admin" hidden>Admin ID</span></label>
+            <label for="login-id"><span data-for-role="student">Student ID</span><span data-for-role="faculty" hidden>Faculty ID</span></label>
             <input id="login-id" name="login_id" type="text" inputmode="numeric" autocomplete="username" required>
           </div>
           <div class="field">

@@ -270,11 +270,7 @@ window.HOPE_MY = {
   "We will check your payment and confirm your tutor. Your Student ID is given after your payment is verified.": "သင့်ငွေပေးချေမှုကို စစ်ဆေးပြီး ဆရာကို အတည်ပြုပေးပါမည်။ ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ကို ပေးပါမည်။",
 
   /* ---------- Interface sidebar and admin prices ---------- */
-  "Website": "ဝက်ဘ်ဆိုက်",
   "Student": "ကျောင်းသား",
-  "Teacher": "ဆရာ",
-  "Admin": "စီမံသူ",
-  "Soon": "မကြာမီ",
   "Amount to pay": "ပေးချေရမည့် ပမာဏ",
 
   /* ---------- Student portal ---------- */
@@ -316,9 +312,11 @@ window.HOPE_MY = {
 
   /* ---------- Log in page ---------- */
   "Log in": "ဝင်ရောက်ရန်",
-  "Admin ID": "စီမံသူ ID",
-  "Teacher accounts are coming soon.": "ဆရာ အကောင့်များ မကြာမီ ရရှိပါမည်။",
   "Back to website": "ဝက်ဘ်ဆိုက်သို့ ပြန်သွားရန်",
-  "Enter your Admin ID and password.": "စီမံသူ ID နှင့် စကားဝှက် ထည့်ပါ။",
-  "Wrong Admin ID or password.": "စီမံသူ ID သို့မဟုတ် စကားဝှက် မှားနေပါသည်။"
+
+  /* ---------- Faculty sign-in ---------- */
+  "Faculty": "ဆရာ/ဝန်ထမ်း",
+  "Faculty ID": "ဆရာ/ဝန်ထမ်း ID",
+  "Enter your Faculty ID and password.": "ဆရာ/ဝန်ထမ်း ID နှင့် စကားဝှက် ထည့်ပါ။",
+  "Wrong Faculty ID or password.": "ဆရာ/ဝန်ထမ်း ID သို့မဟုတ် စကားဝှက် မှားနေပါသည်။"
 };
