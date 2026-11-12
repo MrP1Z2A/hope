@@ -29,6 +29,7 @@
 
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
@@ -392,18 +393,44 @@ input:focus, select:focus, textarea:focus {
 .form-sent .form-success { display: block; }
 .form-sent form { display: none; }
 
-/* Step-by-step enrolment */
-.enrol-steps { list-style: none; padding: 0; margin: 24px 0 12px; }
-.enrol-steps li {
-  display: flex; align-items: center; gap: 14px; padding: 8px 0; color: var(--muted); font-weight: 600;
+/* Step-by-step enrolment — horizontal progress stepper */
+.form-wrap.form-wrap--stepper { grid-template-columns: minmax(0, 1fr); gap: 32px; max-width: 920px; }
+.stepper-wrap h2 { margin-bottom: 0; }
+.enrol-steps {
+  --dot: 34px;
+  list-style: none; padding: 0; margin: 24px 0 12px;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
 }
-.enrol-steps .num {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
-  border: 1.5px solid var(--line); background: var(--white); font-size: 0.9rem; color: var(--muted);
+.enrol-steps li {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 0 6px; text-align: center; color: var(--muted); font-weight: 600;
+}
+/* connecting line from this dot to the next one */
+.enrol-steps li:not(:last-child)::after {
+  content: ""; position: absolute; bottom: calc(var(--dot) / 2 - 2px); left: 50%;
+  width: 100%; height: 4px; background: var(--line); z-index: 0;
+}
+.enrol-steps li.done:not(:last-child)::after { background: var(--gold-light); }
+.step-label { flex: 1; font-size: 0.95rem; line-height: 1.35; }
+.enrol-steps .dot {
+  position: relative; z-index: 1; width: var(--dot); height: var(--dot); border-radius: 50%;
+  flex-shrink: 0; display: grid; place-items: center;
+  background: #b9c0cd; transition: background .25s, transform .25s;
 }
 .enrol-steps li.current { color: var(--navy); }
-.enrol-steps li.current .num { background: var(--navy); border-color: var(--navy); color: var(--white); }
-.enrol-steps li.done .num { background: var(--gold-light); border-color: var(--gold); color: var(--navy); }
+.enrol-steps li.current .dot { background: var(--navy); box-shadow: 0 0 0 4px var(--tint); }
+.enrol-steps li.done { color: var(--navy); }
+.enrol-steps li.done .dot { background: var(--gold); }
+/* tick mark for completed steps */
+.enrol-steps li.done .dot::after {
+  content: ""; width: 7px; height: 13px; margin-top: -3px;
+  border: solid var(--white); border-width: 0 3px 3px 0; transform: rotate(45deg);
+}
+/* completed steps on this page can be clicked to go back */
+.enrol-steps li[data-back-to] { cursor: pointer; }
+.enrol-steps li[data-back-to] .step-label { text-decoration: underline; text-underline-offset: 3px; }
+.enrol-steps li[data-back-to]:hover .step-label { color: var(--gold-dark); }
+.enrol-steps li[data-back-to]:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
 .small-note { font-size: 0.9rem; color: var(--muted); }
 .wizard-step { border: 0; padding: 0; margin: 0; min-width: 0; }
 .wizard-step > h3 { margin-bottom: 18px; }
@@ -478,5 +505,9 @@ input:focus, select:focus, textarea:focus {
   .stats { grid-template-columns: 1fr 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .card, .form-card { padding: 26px 22px; }
+  .enrol-steps { --dot: 26px; }
+  .enrol-steps li { padding: 0 2px; gap: 10px; }
+  .step-label { font-size: 0.72rem; hyphens: auto; overflow-wrap: anywhere; }
+  .enrol-steps li.done .dot::after { width: 5px; height: 10px; border-width: 0 2.5px 2.5px 0; }
   .cta { padding: 48px 22px; border-radius: 20px; }
 }
