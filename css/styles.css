@@ -40,6 +40,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
 a { color: var(--navy); }
 a:hover { color: var(--gold-dark); }
 
@@ -408,6 +409,22 @@ input:focus, select:focus, textarea:focus {
 .wizard-step { border: 0; padding: 0; margin: 0; min-width: 0; }
 .wizard-step > h3 { margin-bottom: 18px; }
 .wizard-step .checklist { margin-bottom: 14px; }
+/* QR payment */
+.pay-qr {
+  display: grid; place-items: center; margin: 4px auto 16px; padding: 18px;
+  width: fit-content; max-width: 100%; background: var(--white);
+  border: 1.5px solid var(--line); border-radius: var(--radius);
+}
+.pay-qr img { width: 240px; height: 240px; max-width: 100%; object-fit: contain; }
+.pay-qr-missing { margin: 0; padding: 40px 20px; color: var(--muted); text-align: center; }
+.wizard-step h3 + .form-grid, .wizard-step p + h3 { margin-top: 24px; }
+.field-hint { font-size: 0.85rem; color: var(--muted); }
+input[type="file"] { padding: 10px; background: var(--cream); cursor: pointer; }
+input[type="file"]::file-selector-button {
+  font: inherit; font-weight: 700; margin-right: 12px; padding: 8px 16px; cursor: pointer;
+  border: 0; border-radius: 999px; background: var(--navy); color: var(--white);
+}
+
 .wizard-nav { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
 .wizard-nav .btn { min-width: 120px; }
 

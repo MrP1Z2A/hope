@@ -55,7 +55,7 @@
             <li data-step="5"><span class="num">5</span><span>Pay online</span></li>
             <li data-step="6"><span class="num">6</span><span>Confirmation and Student ID</span></li>
           </ol>
-          <p class="small-note">Steps 5 and 6 happen after we confirm your tutor.</p>
+          <p class="small-note">Step 6 happens after we verify your payment.</p>
         </div>
 
         <div class="card form-card reveal">
@@ -213,7 +213,34 @@
                   <span class="error-msg">Please choose a package.</span>
                 </div>
               </div>
-              <p class="note">We will confirm your tutor, timetable and price before you pay.</p>
+            </fieldset>
+
+            <!-- Step 5: QR payment and proof of payment -->
+            <fieldset class="wizard-step" data-step="5" hidden>
+              <h3>Pay online</h3>
+              <div class="pay-qr">
+                <!-- Save your payment wallet's QR code as images/payment-qr.png -->
+                <img src="images/payment-qr.png" alt="Payment QR code" width="240" height="240"
+                     onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+                <p class="pay-qr-missing" hidden>Payment QR code coming soon.</p>
+              </div>
+              <p class="center">Scan the QR code with your payment app and pay for your package.</p>
+              <p class="small-note center">Not sure of the price? <a href="contact.html" target="_blank">Contact us</a> before paying.</p>
+
+              <h3>Proof of payment</h3>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label for="receipt">Upload your receipt <span class="req">*</span></label>
+                  <input id="receipt" name="receipt" type="file" required
+                         accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf">
+                  <span class="field-hint">Photo, screenshot or PDF, up to 5 MB.</span>
+                  <span class="error-msg">Please upload an image or PDF under 5 MB.</span>
+                </div>
+                <div class="field field--full">
+                  <label for="payref">Transaction number</label>
+                  <input id="payref" name="payment_reference" type="text" maxlength="100">
+                </div>
+              </div>
             </fieldset>
 
             <div class="wizard-nav">
@@ -226,7 +253,7 @@
           <div class="form-success">
             <span class="star"></span>
             <h2>Request sent!</h2>
-            <p>Next, we will confirm your tutor and send payment details. Your Student ID is given after your first payment is verified.</p>
+            <p>We will check your payment and confirm your tutor. Your Student ID is given after your payment is verified.</p>
           </div>
         </div>
       </div>

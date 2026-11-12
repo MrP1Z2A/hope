@@ -226,7 +226,6 @@ window.HOPE_MY = {
   "Choose a package": "အစီအစဉ် ရွေးရန်",
   "Pay online": "အွန်လိုင်းဖြင့် ပေးချေရန်",
   "Confirmation and Student ID": "အတည်ပြုချက်နှင့် ကျောင်းသား ID",
-  "Steps 5 and 6 happen after we confirm your tutor.": "အဆင့် ၅ နှင့် ၆ ကို သင့်ဆရာ အတည်ပြုပြီးနောက် ဆောင်ရွက်ပါမည်။",
   "The student is under 18": "ကျောင်းသားသည် အသက် ၁၈ နှစ်အောက်ဖြစ်သည်",
   "Parent or guardian name <span class=\"req\">*</span>": "မိဘ သို့မဟုတ် အုပ်ထိန်းသူအမည် <span class=\"req\">*</span>",
   "Parent or guardian phone or email <span class=\"req\">*</span>": "မိဘ သို့မဟုတ် အုပ်ထိန်းသူ၏ ဖုန်း သို့မဟုတ် အီးမေးလ် <span class=\"req\">*</span>",
@@ -246,11 +245,9 @@ window.HOPE_MY = {
   "I have read and agree to the policies.": "မူဝါဒများကို ဖတ်ပြီး သဘောတူပါသည်။",
   "Please agree to continue.": "ဆက်လုပ်ရန် သဘောတူကြောင်း အမှန်ခြစ်ပါ။",
   "My parent or guardian has read and agrees to the policies.": "ကျွန်ုပ်၏ မိဘ သို့မဟုတ် အုပ်ထိန်းသူက မူဝါဒများကို ဖတ်ပြီး သဘောတူပါသည်။",
-  "We will confirm your tutor, timetable and price before you pay.": "သင်မပေးချေမီ ဆရာ၊ အချိန်ဇယားနှင့် စျေးနှုန်းကို အတည်ပြုပေးပါမည်။",
   "Back": "နောက်သို့",
   "Next": "ရှေ့သို့",
   "Request sent!": "တောင်းဆိုချက် ပို့ပြီးပါပြီ!",
-  "Next, we will confirm your tutor and send payment details. Your Student ID is given after your first payment is verified.": "နောက်တစ်ဆင့်အနေဖြင့် သင့်ဆရာကို အတည်ပြုပြီး ငွေပေးချေမှုအသေးစိတ် ပို့ပေးပါမည်။ ပထမဆုံး ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ကို ပေးပါမည်။",
 
   /* ---------- Student ID policy ---------- */
   "Student ID": "ကျောင်းသား ID",
@@ -258,5 +255,17 @@ window.HOPE_MY = {
   "You get a Student ID after your first payment is verified.": "ပထမဆုံး ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ရရှိမည်။",
   "It is a six-digit number, for example 100001.": "ဂဏန်း ခြောက်လုံးပါ နံပါတ်ဖြစ်သည်၊ ဥပမာ 100001။",
   "You keep the same ID for every subject, tutor and renewal. It is never given to anyone else.": "ဘာသာရပ်၊ ဆရာနှင့် သက်တမ်းတိုးတိုင်းအတွက် ID တစ်ခုတည်းကို ဆက်သုံးမည်။ အခြားသူကို ဘယ်တော့မှ ပေးမည်မဟုတ်ပါ။",
-  "It is used for attendance, progress, payments and support. It is not a password.": "တက်ရောက်မှု၊ တိုးတက်မှု၊ ငွေပေးချေမှုနှင့် အကူအညီအတွက် အသုံးပြုသည်။ စကားဝှက် မဟုတ်ပါ။"
+  "It is used for attendance, progress, payments and support. It is not a password.": "တက်ရောက်မှု၊ တိုးတက်မှု၊ ငွေပေးချေမှုနှင့် အကူအညီအတွက် အသုံးပြုသည်။ စကားဝှက် မဟုတ်ပါ။",
+
+  /* ---------- QR payment ---------- */
+  "Step 6 happens after we verify your payment.": "အဆင့် ၆ ကို သင့်ငွေပေးချေမှု စစ်ဆေးအတည်ပြုပြီးနောက် ဆောင်ရွက်ပါမည်။",
+  "Payment QR code coming soon.": "ငွေပေးချေရန် QR ကုဒ် မကြာမီ ထည့်ပါမည်။",
+  "Scan the QR code with your payment app and pay for your package.": "သင့်ငွေပေးချေမှုအက်ပ်ဖြင့် QR ကုဒ်ကို စကင်ဖတ်ပြီး အစီအစဉ်ကြေး ပေးချေပါ။",
+  "Not sure of the price? <a href=\"contact.html\" target=\"_blank\">Contact us</a> before paying.": "စျေးနှုန်း မသေချာဘူးလား? မပေးချေမီ <a href=\"contact.html\" target=\"_blank\">ဆက်သွယ်ပါ</a>။",
+  "Proof of payment": "ငွေပေးချေမှု အထောက်အထား",
+  "Upload your receipt <span class=\"req\">*</span>": "ငွေလွှဲပြေစာ တင်ပါ <span class=\"req\">*</span>",
+  "Photo, screenshot or PDF, up to 5 MB.": "ဓာတ်ပုံ၊ စခရင်ရှော့ သို့မဟုတ် PDF၊ 5 MB အထိ။",
+  "Please upload an image or PDF under 5 MB.": "5 MB အောက် ဓာတ်ပုံ သို့မဟုတ် PDF တင်ပါ။",
+  "Transaction number": "ငွေလွှဲ နံပါတ်",
+  "We will check your payment and confirm your tutor. Your Student ID is given after your payment is verified.": "သင့်ငွေပေးချေမှုကို စစ်ဆေးပြီး ဆရာကို အတည်ပြုပေးပါမည်။ ငွေပေးချေမှု အတည်ပြုပြီးနောက် ကျောင်းသား ID ကို ပေးပါမည်။"
 };

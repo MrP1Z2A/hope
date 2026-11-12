@@ -1,13 +1,17 @@
 /* Hope Online Tuition School — step-by-step enrolment form (enrol.html)
-   Steps 1–4 happen on this page. Steps 5 (payment) and 6 (confirmation and
-   Student ID) happen after Hope Education confirms the tutor.
+   Steps 1–5 happen on this page (step 5: QR payment + receipt upload).
+   Step 6 (confirmation and Student ID) happens after the payment is verified.
 
-   Submissions are saved to the Supabase "enrolments" table (js/supabase.js). */
+   The receipt goes to the private Supabase bucket "payment-receipts" and the
+   enrolment to the "enrolments" table (js/supabase.js, supabase/002_payment.sql). */
 (function () {
   "use strict";
 
-  var LAST_STEP = 4;          // last step completed on the website
+  var LAST_STEP = 5;          // last step completed on the website
   var DRAFT_KEY = "hope-enrol-draft";
+  var RECEIPT_BUCKET = "payment-receipts";
+  var MAX_RECEIPT_BYTES = 5 * 1024 * 1024;   // 5 MB, same as the bucket limit
+  var RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"];
 
   var form = document.getElementById("enrol-form");
   if (!form) return;
@@ -48,6 +52,16 @@
     });
   }
   under18.addEventListener("change", toggleGuardian);
+
+  /* ---------- Receipt file: image or PDF, max 5 MB ---------- */
+  var receiptInput = document.getElementById("receipt");
+  function checkReceipt() {
+    var file = receiptInput.files[0];
+    var bad = file && (file.size > MAX_RECEIPT_BYTES ||
+      (file.type && RECEIPT_TYPES.indexOf(file.type) === -1));
+    receiptInput.setCustomValidity(bad ? "invalid" : "");
+  }
+  receiptInput.addEventListener("change", checkReceipt);
 
   /* ---------- Checking answers ---------- */
   function validateField(field) {
@@ -111,10 +125,11 @@
       });
       try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ }
     }
-    if (!window.hopeSave) { done(); return; }
+    if (!window.hopeSave || !window.hopeUpload) { done(); return; }
 
     sendBtn.disabled = true;
-    window.hopeSave("enrolments", buildRow())
+    window.hopeUpload(RECEIPT_BUCKET, receiptInput.files[0])
+      .then(function (receiptPath) { return window.hopeSave("enrolments", buildRow(receiptPath)); })
       .then(done)
       .catch(function (err) {
         console.error(err);
@@ -124,7 +139,7 @@
   });
 
   /* One row for the "enrolments" table in Supabase (see supabase/schema.sql). */
-  function buildRow() {
+  function buildRow(receiptPath) {
     var f = form.elements;
     var text = function (name) { var v = (f[name] && f[name].value || "").trim(); return v || null; };
     var under = under18.checked;
@@ -147,6 +162,10 @@
       guardian_agreed: under ? f.guardian_agreed.checked : false,
       policy_accepted_at: text("policy_accepted_at") || new Date().toISOString(),
       package: text("package"),
+      status: receiptPath ? "Payment Pending" : "New request",
+      receipt_path: receiptPath || null,
+      payment_reference: text("payment_reference"),
+      payment_submitted_at: receiptPath ? new Date().toISOString() : null,
       language: document.documentElement.lang === "my" ? "my" : "en"
     };
   }
@@ -155,7 +174,7 @@
   function saveDraft() {
     var data = { step: current, values: {} };
     Array.prototype.forEach.call(form.elements, function (el) {
-      if (!el.name) return;
+      if (!el.name || el.type === "file") return;   // files can't be saved; re-choose after returning
       if (el.type === "checkbox" || el.type === "radio") {
         if (el.checked) data.values[el.name + "=" + el.value] = true;
       } else if (el.value) {
@@ -170,7 +189,7 @@
     try { data = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) { /* ignore */ }
     if (!data || !data.values) return 1;
     Array.prototype.forEach.call(form.elements, function (el) {
-      if (!el.name) return;
+      if (!el.name || el.type === "file") return;
       if (el.type === "checkbox" || el.type === "radio") {
         el.checked = !!data.values[el.name + "=" + el.value];
       } else if (data.values[el.name] && !(el.name === "package" && el.value)) {
