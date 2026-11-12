@@ -108,11 +108,8 @@
     planSelect.value = planParam;
   }
 
-  // Forms (enrol + contact)
-  // To receive submissions, create a free form at https://formspree.io and
-  // put its URL in the form's data-endpoint attribute, e.g.
-  //   <form data-endpoint="https://formspree.io/f/abcdwxyz">
-  // Until then the form only checks the answers and shows the thank-you message.
+  // Simple forms (contact). A form with data-table="..." is saved to that
+  // Supabase table (see js/supabase.js). The enrol form is handled in js/enrol.js.
   document.querySelectorAll("form[data-hope-form]").forEach(function (form) {
     form.setAttribute("novalidate", "");
 
@@ -148,24 +145,21 @@
       }
 
       var wrap = form.parentElement;
-      var endpoint = form.getAttribute("data-endpoint");
+      var table = form.getAttribute("data-table");
       var button = form.querySelector("button[type=submit]");
 
-      if (!endpoint) { wrap.classList.add("form-sent"); return; }
+      if (!table || !window.hopeSave) { wrap.classList.add("form-sent"); return; }
+
+      var row = {};
+      new FormData(form).forEach(function (value, key) { row[key] = String(value).trim(); });
 
       button.disabled = true;
-      button.textContent = "Sending…";
-      fetch(endpoint, {
-        method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" }
-      }).then(function (res) {
-        if (!res.ok) throw new Error("Request failed");
+      window.hopeSave(table, row).then(function () {
         wrap.classList.add("form-sent");
-      }).catch(function () {
+      }).catch(function (err) {
+        console.error(err);
         button.disabled = false;
-        button.textContent = "Try again";
-        alert("Sorry, something went wrong. Please try again or email us directly.");
+        window.hopeSaveError();
       });
     });
   });

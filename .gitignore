@@ -4,3 +4,6 @@ Hope/
 .claude/
 # Original logo file (the site uses images/logo.jpg)
 photo_2026-08-23_22-38-02.jpg
+
+# Secret keys — never commit
+.env
