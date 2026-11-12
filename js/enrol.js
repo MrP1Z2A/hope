@@ -28,12 +28,41 @@
       var k = Number(li.dataset.step);
       li.classList.toggle("current", k === n);
       li.classList.toggle("done", k < n);
+      setStepState(li, k === n, k < n);
     });
     backBtn.hidden = n === 1;
     nextBtn.hidden = n === LAST_STEP;
     sendBtn.hidden = n !== LAST_STEP;
     saveDraft();
   }
+
+  /* Progress bar: mark the current step for screen readers and let students
+     click a finished step to go back to it. */
+  function setStepState(li, isCurrent, canGoBack) {
+    if (isCurrent) li.setAttribute("aria-current", "step");
+    else li.removeAttribute("aria-current");
+    if (canGoBack) {
+      li.setAttribute("data-back-to", "");
+      li.setAttribute("tabindex", "0");
+      li.setAttribute("role", "button");
+    } else {
+      li.removeAttribute("data-back-to");
+      li.removeAttribute("tabindex");
+      li.removeAttribute("role");
+    }
+  }
+
+  listItems.forEach(function (li) {
+    function goBack(ev) {
+      if (!li.hasAttribute("data-back-to")) return;
+      if (ev.type === "keydown" && ev.key !== "Enter" && ev.key !== " ") return;
+      ev.preventDefault();
+      showStep(Number(li.dataset.step));
+      scrollToForm();
+    }
+    li.addEventListener("click", goBack);
+    li.addEventListener("keydown", goBack);
+  });
 
   function scrollToForm() {
     var top = form.closest(".form-card").getBoundingClientRect().top + window.scrollY - 100;
@@ -108,6 +137,7 @@
         var k = Number(li.dataset.step);
         li.classList.toggle("done", k <= LAST_STEP);
         li.classList.toggle("current", k === LAST_STEP + 1);
+        setStepState(li, k === LAST_STEP + 1, false);
       });
       try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ }
     }
