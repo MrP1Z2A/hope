@@ -272,7 +272,50 @@
     ]);
   }
 
-  function openEnrolment(id) {
+  /* Login details box (shown once after accepting a payment or resetting a password). */
+  function credentialsBox(info) {
+    if (!info.temp_password) {
+      return h("div", { class: "credentials" }, [
+        h("h3", { text: "Student ID " + info.student_id }),
+        h("p", { class: "small-note", text: "This student already has a password, so no new one was made. " +
+          "If they need a new one, use Students → Reset password." })
+      ]);
+    }
+    var portalUrl = new URL("student.html", location.href).href;
+    var subject = "Your Hope Education student account";
+    var message =
+      "Dear " + info.student_name + ",\n\n" +
+      "Your payment has been accepted and you are now enrolled at Hope Education.\n\n" +
+      "Student ID: " + info.student_id + "\n" +
+      "Temporary password: " + info.temp_password + "\n\n" +
+      "Sign in to the student portal: " + portalUrl + "\n" +
+      "You will be asked to choose your own password the first time you sign in.\n\n" +
+      "Please keep these details private.\n\nHope Education";
+    var mailto = "mailto:" + encodeURIComponent(info.email).replace(/%40/g, "@") +
+      "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(message);
+
+    return h("div", { class: "credentials" }, [
+      h("h3", { text: "Send these login details to the student" }),
+      h("dl", null, [
+        h("dt", { text: "Student ID" }), h("dd", { text: String(info.student_id) }),
+        h("dt", { text: "Temporary password" }), h("dd", { text: info.temp_password }),
+        h("dt", { text: "Email" }), h("dd", { text: info.email })
+      ]),
+      h("div", { class: "btn-row" }, [
+        h("a", { class: "btn btn--gold btn--sm", href: mailto, text: "Email the student" }),
+        h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Copy message", onclick: function (e) {
+          navigator.clipboard.writeText(message).then(function () {
+            e.target.textContent = "Copied";
+          }, function () { toast("Could not copy. Select the details and copy them by hand.", true); });
+        } })
+      ]),
+      h("p", { class: "small-note", text: "The password is shown only this once and is not stored in readable form. " +
+        "\"Email the student\" opens your email app with the message ready to send. " +
+        "If it is lost, use Students → Reset password." })
+    ]);
+  }
+
+  function openEnrolment(id, banner) {
     var body = $("#dlg-body");
     $("#dlg-title").textContent = "Enrolment #" + id;
     body.replaceChildren(emptyState("Loading…"));
@@ -314,9 +357,9 @@
           h("button", { type: "button", class: "btn btn--gold", text: "Accept payment and enrol", onclick: function (e) {
             if (!confirm("Accept the payment and enrol " + r.student_name + "?\nThis gives them a permanent Student ID.")) return;
             e.target.disabled = true;
-            rest("rpc/activate_enrolment", "POST", { p_enrolment_id: r.id }).then(function (studentId) {
-              toast(r.student_name + " is enrolled. Student ID: " + studentId);
-              openEnrolment(r.id); loadEnrolments(); refreshCounts();
+            rest("rpc/accept_enrolment", "POST", { p_enrolment_id: r.id }).then(function (info) {
+              toast(r.student_name + " is enrolled. Student ID: " + info.student_id);
+              openEnrolment(r.id, credentialsBox(info)); loadEnrolments(); refreshCounts();
             }).catch(function (err) { e.target.disabled = false; fail(err); });
           } }),
           (r.status === "Payment Pending" || r.status === "New request") ?
@@ -390,6 +433,7 @@
           ["Agreed at", fmtDate(r.policy_accepted_at)], ["Website language", r.language === "my" ? "Burmese" : "English"]
         ])
       );
+      if (banner) body.prepend(banner);
     }).catch(fail);
   }
 
@@ -424,16 +468,56 @@
   function loadStudents() {
     var box = $("#student-list");
     box.replaceChildren(emptyState("Loading…"));
-    rest("students?select=*&order=student_id.asc").then(function (rows) {
+    // Password columns are never readable through the website, so list the columns we need.
+    rest("students?select=student_id,student_name,email,created_at,last_login_at,must_change_password&order=student_id.asc").then(function (rows) {
       if (!rows.length) { box.replaceChildren(emptyState("No students yet. Students appear here after their payment is accepted.")); return; }
       box.replaceChildren(h("table", { class: "admin-table" }, [
-        h("thead", null, [h("tr", null, ["Student ID", "Name", "Email", "Since"].map(function (t) { return h("th", { text: t }); }))]),
+        h("thead", null, [h("tr", null, ["Student ID", "Name", "Email", "Since", "Last sign-in", ""].map(function (t) { return h("th", { text: t }); }))]),
         h("tbody", null, rows.map(function (s) {
-          return h("tr", null, [h("td", null, [h("strong", { text: String(s.student_id) })]), h("td", { text: s.student_name }),
-                                h("td", { text: s.email }), h("td", { text: fmtDate(s.created_at) })]);
+          return h("tr", null, [
+            h("td", null, [h("strong", { text: String(s.student_id) })]),
+            h("td", { text: s.student_name }),
+            h("td", { text: s.email }),
+            h("td", { text: fmtDate(s.created_at) }),
+            h("td", { text: s.last_login_at ? fmtDate(s.last_login_at) : "Never" }),
+            h("td", null, [h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Reset password", onclick: function (e) {
+              if (!confirm("Give " + s.student_name + " a new temporary password?\nTheir old password stops working and they are signed out.")) return;
+              e.target.disabled = true;
+              rest("rpc/admin_reset_student_password", "POST", { p_student_id: s.student_id }).then(function (info) {
+                $("#dlg-title").textContent = info.student_name;
+                $("#dlg-body").replaceChildren(credentialsBox(info));
+                if (!dialog.open) dialog.showModal();
+                loadStudents();
+              }).catch(function (err) { e.target.disabled = false; fail(err); });
+            } })])
+          ]);
         }))
       ]));
     }).catch(fail);
+  }
+
+  /* ---------- Student chat moderation ---------- */
+  function loadChat() {
+    var box = $("#chat-mod-list");
+    box.replaceChildren(emptyState("Loading…"));
+    rest("student_messages?select=id,body,created_at,student_id,students(student_name)&deleted=eq.false&order=id.desc&limit=200")
+      .then(function (rows) {
+        if (!rows.length) { box.replaceChildren(emptyState("No chat messages yet.")); return; }
+        box.replaceChildren.apply(box, rows.map(function (m) {
+          var name = (m.students && m.students.student_name) || "Student";
+          var card = h("article", { class: "card mod-msg" }, [
+            h("div", { class: "mod-meta", text: name + " · Student ID " + m.student_id + " · " + fmtDate(m.created_at) }),
+            h("p", { class: "mod-body", text: m.body }),
+            h("button", { type: "button", class: "btn-link-danger", text: "Remove", onclick: function () {
+              if (!confirm("Remove this message from the student chat?")) return;
+              updateRow("student_messages", m.id, { deleted: true, deleted_by: me.admin_id })
+                .then(function () { card.remove(); toast("Message removed."); })
+                .catch(fail);
+            } })
+          ]);
+          return card;
+        }));
+      }).catch(fail);
   }
 
   /* ---------- Website settings ---------- */
@@ -488,7 +572,7 @@
     }).catch(fail).then(function () { btn.disabled = false; });
   });
 
-  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, website: loadWebsite };
+  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, chat: loadChat, website: loadWebsite };
 
   /* ---------- Start ---------- */
   session = readSession();
