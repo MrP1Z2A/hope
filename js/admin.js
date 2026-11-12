@@ -1,6 +1,7 @@
 /* Hope Education — admin portal (admin.html)
 
    Admins are kept in the Supabase "admins" table (see supabase/003_admin.sql).
+   Signing in happens on login.html; this page sends you there if you are not signed in.
    Signing in calls admin_login(), which checks the hashed password and returns a
    12-hour session token. Every request sends that token in the "x-admin-token"
    header, and the database rules only allow admin actions for a valid token.
@@ -75,20 +76,6 @@
     try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; }
   }
 
-  /* Call a database function without a session (used for signing in). */
-  function rpcPublic(name, args) {
-    return fetch(CFG.url + "/rest/v1/rpc/" + name, {
-      method: "POST",
-      headers: { apikey: CFG.publishableKey, "Content-Type": "application/json" },
-      body: JSON.stringify(args || {})
-    }).then(function (r) {
-      return r.json().then(function (j) {
-        if (!r.ok) throw new Error(j && j.message || "Request failed");
-        return j;
-      });
-    });
-  }
-
   function ensureFresh() {
     if (!session) return Promise.reject(new Error("signed out"));
     if (new Date(session.expires_at).getTime() > Date.now()) return Promise.resolve();
@@ -129,19 +116,15 @@
       });
   }
 
-  /* ---------- Sign in / out ---------- */
-  function showLogin(message) {
-    $("#dash-view").hidden = true;
-    $("#login-view").hidden = false;
-    var err = $("#login-error");
-    err.textContent = message || "";
-    err.hidden = !message;
+  /* ---------- Sign in / out (signing in happens on login.html) ---------- */
+  function goToLogin(ended) {
+    location.replace("login.html?role=admin" + (ended ? "&ended=1" : ""));
   }
 
   function signOutLocal(message) {
     saveSession(null);
     me = null;
-    showLogin(message);
+    goToLogin(!!message);
   }
 
   /* Check the saved session is still valid and get the admin's name. */
@@ -156,40 +139,24 @@
     });
   }
 
-  $("#login-form").addEventListener("submit", function (ev) {
-    ev.preventDefault();
-    var id = $("#admin-id").value.trim();
-    var pw = $("#admin-pw").value;
-    var btn = ev.target.querySelector("button[type=submit]");
-    if (!/^[A-Za-z0-9_-]{2,30}$/.test(id) || !pw) { showLogin("Enter your Admin ID and password."); return; }
-    btn.disabled = true;
-    rpcPublic("admin_login", { p_admin_id: id, p_password: pw })
-      .then(function (res) {
-        if (!res || res.error || !res.token) { showLogin((res && res.error) || "Wrong Admin ID or password."); return; }
-        saveSession({ token: res.token, expires_at: res.expires_at });
-        me = { admin_id: res.admin_id, admin_name: res.admin_name };
-        $("#admin-pw").value = "";
-        showDashboard();
-      })
-      .catch(function (err) { console.error(err); showLogin("Could not sign in. Please try again."); })
-      .then(function () { btn.disabled = false; });
-  });
-
-  $("#sign-out").addEventListener("click", function () {
+  /* Sign out: end the session on the server, then go back to the main website. */
+  $("#sign-out").addEventListener("click", function (ev) {
     var token = session && session.token;
-    signOutLocal();
-    if (!token) return;
-    // End the session on the server too, so the old token stops working.
+    ev.target.disabled = true;
+    saveSession(null);
+    me = null;
+    var done = function () { location.replace("index.html"); };
+    if (!token) { done(); return; }
     fetch(CFG.url + "/rest/v1/rpc/admin_logout", {
       method: "POST",
+      keepalive: true,
       headers: { apikey: CFG.publishableKey, "x-admin-token": token, "Content-Type": "application/json" },
       body: "{}"
-    }).catch(function () { /* it also expires on its own after 12 hours */ });
+    }).catch(function () { /* it also expires on its own after 12 hours */ }).then(done);
   });
 
   /* ---------- Dashboard ---------- */
   function showDashboard() {
-    $("#login-view").hidden = true;
     $("#dash-view").hidden = false;
     $("#admin-hello").textContent = "Hello, " + me.admin_name;
     $("#admin-who").textContent = "Admin ID: " + me.admin_id;
@@ -576,9 +543,9 @@
 
   /* ---------- Start ---------- */
   session = readSession();
-  if (session) {
+  if (session && session.token) {
     loadMe().catch(function (err) { if (String(err.message) !== "signed out") signOutLocal("Please sign in again."); });
   } else {
-    showLogin();
+    goToLogin(false);
   }
 })();

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in | Hope Online Tuition School</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body class="admin-page">
+
+  <div class="portal-lang">
+    <button class="lang-switch" type="button" aria-label="Switch language / ဘာသာစကား ပြောင်းရန်" data-no-translate><span data-lang="en">EN</span><span data-lang="my">မြန်မာ</span></button>
+  </div>
+
+  <main class="admin-main">
+    <section class="admin-login">
+      <div class="card login-card">
+        <a href="index.html" class="login-logo" aria-label="Hope Online Tuition School home"><img src="images/logo.jpg" alt="Hope"></a>
+        <h1>Log in</h1>
+
+        <!-- Who is signing in -->
+        <div class="role-tabs" role="radiogroup" aria-label="I am a">
+          <button type="button" role="radio" data-role="student" aria-checked="true">Student</button>
+          <button type="button" role="radio" data-role="teacher" aria-checked="false">Teacher</button>
+          <button type="button" role="radio" data-role="admin" aria-checked="false">Admin</button>
+        </div>
+
+        <p class="portal-hint" id="teacher-note" hidden>Teacher accounts are coming soon.</p>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="login-id"><span data-for-role="student">Student ID</span><span data-for-role="admin" hidden>Admin ID</span></label>
+            <input id="login-id" name="login_id" type="text" inputmode="numeric" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="login-pw">Password</label>
+            <input id="login-pw" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <p class="admin-error" id="login-error" role="alert" hidden data-no-translate></p>
+          <button type="submit" class="btn btn--gold" style="width:100%">Log in</button>
+        </form>
+
+        <p class="portal-hint" data-for-role="student">Your Student ID and password are emailed to you after your payment is accepted.</p>
+        <p class="portal-hint"><a href="index.html">Back to website</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/translations.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

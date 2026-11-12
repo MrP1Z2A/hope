@@ -312,5 +312,13 @@ window.HOPE_MY = {
   "Choose a password different from the current one.": "လက်ရှိနှင့် မတူသော စကားဝှက်ကို ရွေးပါ။",
   "Please choose a new password first.": "စကားဝှက်အသစ်ကို အရင် ရွေးပါ။",
   "Messages must be 1 to 1000 characters.": "စာသည် စာလုံး ၁ မှ ၁၀၀၀ အတွင်း ဖြစ်ရမည်။",
-  "You are sending messages too quickly. Please wait a moment.": "စာများ မြန်လွန်းစွာ ပို့နေပါသည်။ ခဏစောင့်ပါ။"
+  "You are sending messages too quickly. Please wait a moment.": "စာများ မြန်လွန်းစွာ ပို့နေပါသည်။ ခဏစောင့်ပါ။",
+
+  /* ---------- Log in page ---------- */
+  "Log in": "ဝင်ရောက်ရန်",
+  "Admin ID": "စီမံသူ ID",
+  "Teacher accounts are coming soon.": "ဆရာ အကောင့်များ မကြာမီ ရရှိပါမည်။",
+  "Back to website": "ဝက်ဘ်ဆိုက်သို့ ပြန်သွားရန်",
+  "Enter your Admin ID and password.": "စီမံသူ ID နှင့် စကားဝှက် ထည့်ပါ။",
+  "Wrong Admin ID or password.": "စီမံသူ ID သို့မဟုတ် စကားဝှက် မှားနေပါသည်။"
 };
