@@ -318,5 +318,9 @@ window.HOPE_MY = {
   "Faculty": "ဆရာ/ဝန်ထမ်း",
   "Faculty ID": "ဆရာ/ဝန်ထမ်း ID",
   "Enter your Faculty ID and password.": "ဆရာ/ဝန်ထမ်း ID နှင့် စကားဝှက် ထည့်ပါ။",
-  "Wrong Faculty ID or password.": "ဆရာ/ဝန်ထမ်း ID သို့မဟုတ် စကားဝှက် မှားနေပါသည်။"
+  "Wrong Faculty ID or password.": "ဆရာ/ဝန်ထမ်း ID သို့မဟုတ် စကားဝှက် မှားနေပါသည်။",
+
+  /* ---------- Password eye button ---------- */
+  "Show password": "စကားဝှက် ပြရန်",
+  "Hide password": "စကားဝှက် ဖျောက်ရန်"
 };

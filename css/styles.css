@@ -376,6 +376,18 @@ input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201,162,74,.18);
 }
 .field.invalid input, .field.invalid select, .field.invalid textarea { border-color: #c0392b; }
+
+/* Password box with an eye button to show / hide what is typed */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 48px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); cursor: pointer;
+}
+.pw-toggle:hover { color: var(--navy); }
+.pw-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+input::-ms-reveal, input::-ms-clear { display: none; } /* Edge's own eye would double up */
 .error-msg { color: #c0392b; font-size: 0.85rem; display: none; }
 .field.invalid .error-msg { display: block; }
 .check-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
