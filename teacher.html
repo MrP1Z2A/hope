@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher Portal | Hope Online Tuition School</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body class="admin-page teacher-page">
+
+  <div class="portal-lang">
+    <button class="lang-switch" type="button" aria-label="Switch language / ဘာသာစကား ပြောင်းရန်" data-no-translate><span data-lang="en">EN</span><span data-lang="my">မြန်မာ</span></button>
+  </div>
+
+  <main class="admin-main">
+    <!-- ===== Choose a new password ===== -->
+    <section id="t-change" class="admin-login" hidden>
+      <div class="card login-card change-card">
+        <h1>Choose a new password</h1>
+        <p class="portal-hint" id="t-change-intro">Please replace your temporary password with one only you know.</p>
+        <form id="t-change-form" novalidate>
+          <div class="field">
+            <label for="t-pw-current">Current password</label>
+            <input id="t-pw-current" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="field">
+            <label for="t-pw-new">New password (at least 8 characters)</label>
+            <input id="t-pw-new" type="password" autocomplete="new-password" minlength="8" required>
+          </div>
+          <div class="field">
+            <label for="t-pw-confirm">Type the new password again</label>
+            <input id="t-pw-confirm" type="password" autocomplete="new-password" minlength="8" required>
+          </div>
+          <p class="admin-error" id="t-change-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn--gold" style="width:100%">Save password</button>
+          <button type="button" class="btn btn--outline" style="width:100%" id="t-change-cancel" hidden>Back</button>
+          <button type="button" class="btn btn--outline" style="width:100%" id="t-change-signout" hidden>Sign out</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== Teacher portal ===== -->
+    <section id="t-dash" hidden>
+      <header class="admin-top">
+        <div>
+          <span class="eyebrow">Teacher portal</span>
+          <h1 id="t-hello" data-no-translate>Hello</h1>
+        </div>
+        <div class="admin-top-actions">
+          <span class="admin-who" id="t-who" data-no-translate></span>
+          <button type="button" class="btn btn--outline btn--sm" id="t-open-change">Change password</button>
+          <button type="button" class="btn btn--outline btn--sm" id="t-sign-out">Sign out</button>
+        </div>
+      </header>
+
+      <div class="panel-bar">
+        <h2 class="portal-section-title">My students</h2>
+        <button type="button" class="btn btn--outline btn--sm" id="t-refresh">Refresh</button>
+      </div>
+      <p class="admin-error" id="t-error" role="alert" hidden data-no-translate></p>
+      <div id="t-students" class="teacher-students" data-no-translate></div>
+    </section>
+  </main>
+
+  <p class="admin-toast" id="toast" role="status" hidden data-no-translate></p>
+
+  <script src="js/translations.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/teacher.js"></script>
+</body>
+</html>

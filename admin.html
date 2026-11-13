@@ -32,6 +32,7 @@
         <button type="button" role="tab" data-tab="enrolments" aria-selected="true">Enrolments <span class="tab-count" id="pending-count" hidden></span></button>
         <button type="button" role="tab" data-tab="messages" aria-selected="false">Messages <span class="tab-count" id="message-count" hidden></span></button>
         <button type="button" role="tab" data-tab="students" aria-selected="false">Students</button>
+        <button type="button" role="tab" data-tab="teachers" aria-selected="false">Teachers</button>
         <button type="button" role="tab" data-tab="chat" aria-selected="false">Student chat</button>
         <button type="button" role="tab" data-tab="website" aria-selected="false">Website</button>
       </nav>
@@ -70,6 +71,22 @@
           <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
         </div>
         <div class="table-wrap" id="student-list"></div>
+      </div>
+
+      <!-- Teachers -->
+      <div class="admin-panel" data-panel="teachers" hidden>
+        <form class="card teacher-add" id="teacher-add" novalidate>
+          <h3>Add a teacher</h3>
+          <div class="field"><label for="tch-id">Faculty ID</label><input id="tch-id" type="text" maxlength="30" autocomplete="off" required></div>
+          <div class="field"><label for="tch-name">Name</label><input id="tch-name" type="text" maxlength="100" autocomplete="off" required></div>
+          <div class="field"><label for="tch-email">Email</label><input id="tch-email" type="email" maxlength="320" autocomplete="off"></div>
+          <button type="submit" class="btn btn--gold">Add teacher</button>
+        </form>
+        <div class="panel-bar">
+          <p class="small-note" style="margin:0">Assign students to teachers in the Students tab.</p>
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div class="table-wrap" id="teacher-list"></div>
       </div>
 
       <!-- Student chat moderation -->

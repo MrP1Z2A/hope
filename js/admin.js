@@ -436,18 +436,31 @@
     var box = $("#student-list");
     box.replaceChildren(emptyState("Loading…"));
     // Password columns are never readable through the website, so list the columns we need.
-    rest("students?select=student_id,student_name,email,created_at,last_login_at,must_change_password&order=student_id.asc").then(function (rows) {
+    Promise.all([
+      rest("students?select=student_id,student_name,email,created_at,last_login_at,must_change_password&order=student_id.asc"),
+      rest("teacher_students?select=id,student_id,subject,teachers(teacher_name)&order=subject.asc")
+    ]).then(function (res) {
+      var rows = res[0];
+      var byStudent = {};
+      res[1].forEach(function (a) { (byStudent[a.student_id] = byStudent[a.student_id] || []).push(a); });
       if (!rows.length) { box.replaceChildren(emptyState("No students yet. Students appear here after their payment is accepted.")); return; }
       box.replaceChildren(h("table", { class: "admin-table" }, [
-        h("thead", null, [h("tr", null, ["Student ID", "Name", "Email", "Since", "Last sign-in", ""].map(function (t) { return h("th", { text: t }); }))]),
+        h("thead", null, [h("tr", null, ["Student ID", "Name", "Email", "Teachers", "Last sign-in", ""].map(function (t) { return h("th", { text: t }); }))]),
         h("tbody", null, rows.map(function (s) {
+          var mine = byStudent[s.student_id] || [];
           return h("tr", null, [
             h("td", null, [h("strong", { text: String(s.student_id) })]),
             h("td", { text: s.student_name }),
             h("td", { text: s.email }),
-            h("td", { text: fmtDate(s.created_at) }),
+            h("td", null, [mine.length
+              ? h("ul", { class: "cell-list" }, mine.map(function (a) {
+                  return h("li", { text: a.subject + " – " + ((a.teachers && a.teachers.teacher_name) || "?") });
+                }))
+              : h("small", { text: "None yet" })]),
             h("td", { text: s.last_login_at ? fmtDate(s.last_login_at) : "Never" }),
-            h("td", null, [h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Reset password", onclick: function (e) {
+            h("td", null, [h("div", { class: "btn-row" }, [
+              h("button", { type: "button", class: "btn btn--gold btn--sm", text: "Assign teacher", onclick: function () { openAssign(s); } }),
+              h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Reset password", onclick: function (e) {
               if (!confirm("Give " + s.student_name + " a new temporary password?\nTheir old password stops working and they are signed out.")) return;
               e.target.disabled = true;
               rest("rpc/admin_reset_student_password", "POST", { p_student_id: s.student_id }).then(function (info) {
@@ -456,12 +469,195 @@
                 if (!dialog.open) dialog.showModal();
                 loadStudents();
               }).catch(function (err) { e.target.disabled = false; fail(err); });
-            } })])
+            } })])])
           ]);
         }))
       ]));
     }).catch(fail);
   }
+
+  /* ---------- Assign teachers to a student (one row per subject) ---------- */
+  function openAssign(s) {
+    var body = $("#dlg-body");
+    $("#dlg-title").textContent = s.student_name;
+    body.replaceChildren(emptyState("Loading…"));
+    if (!dialog.open) dialog.showModal();
+
+    Promise.all([
+      rest("teacher_students?select=id,subject,class_link,teacher_id,teachers(teacher_name)&student_id=eq." + s.student_id + "&order=subject.asc"),
+      rest("teachers?select=teacher_id,teacher_name&active=is.true&order=teacher_name.asc"),
+      rest("enrolments?select=subjects&student_id=eq." + s.student_id + "&order=created_at.desc&limit=1")
+    ]).then(function (res) {
+      var current = res[0], teachers = res[1];
+      var subjects = (res[2][0] && res[2][0].subjects) || [];
+
+      var list = current.length
+        ? h("ul", { class: "assign-list" }, current.map(function (a) {
+            return h("li", null, [
+              h("span", null, [h("strong", { text: a.subject }), " – " + ((a.teachers && a.teachers.teacher_name) || a.teacher_id),
+                a.class_link ? h("small", { class: "small-note", text: "  · class link set" }) : null]),
+              h("button", { type: "button", class: "btn-link-danger", text: "Remove", onclick: function () {
+                if (!confirm("Remove " + a.subject + " with " + ((a.teachers && a.teachers.teacher_name) || a.teacher_id) + "?")) return;
+                rest("teacher_students?id=eq." + a.id, "DELETE", null, "return=representation").then(function (rows) {
+                  if (!rows || !rows.length) throw new Error("Not removed — you may not have permission.");
+                  toast("Removed."); openAssign(s); loadStudents();
+                }).catch(fail);
+              } })
+            ]);
+          }))
+        : emptyState("No teachers assigned yet.");
+
+      if (!teachers.length) {
+        body.replaceChildren(h("section", { class: "detail-block" }, [h("h3", { text: "Teachers" }), list]),
+          emptyState("Add a teacher in the Teachers tab first."));
+        return;
+      }
+
+      var teacherSel = h("select", { id: "as-teacher", required: true }, teachers.map(function (tc) {
+        return h("option", { value: tc.teacher_id, text: tc.teacher_name + " (" + tc.teacher_id + ")" });
+      }));
+      var subjectInput = h("input", { id: "as-subject", type: "text", maxlength: "100", list: "as-subjects", required: true, autocomplete: "off" });
+      if (subjects.length) subjectInput.value = subjects[0];
+      var linkInput = h("input", { id: "as-link", type: "url", maxlength: "500", autocomplete: "off" });
+
+      var form = h("form", { class: "assign-form", novalidate: true, onsubmit: function (ev) {
+        ev.preventDefault();
+        var subject = subjectInput.value.trim(), link = linkInput.value.trim();
+        if (!subject) { toast("Enter the subject.", true); return; }
+        if (link && !/^https:\/\/[^\s<>"]+$/i.test(link)) { toast("The class link must start with https://", true); return; }
+        var btn = form.querySelector("button[type=submit]");
+        btn.disabled = true;
+        rest("teacher_students", "POST", { teacher_id: teacherSel.value, student_id: s.student_id, subject: subject, class_link: link || null },
+             "return=representation").then(function (rows) {
+          if (!rows || !rows.length) throw new Error("Not saved — you may not have permission.");
+          toast(s.student_name + " assigned."); openAssign(s); loadStudents();
+        }).catch(function (err) {
+          btn.disabled = false;
+          if (/duplicate key/i.test(err.message)) toast("That teacher already teaches this subject to " + s.student_name + ".", true);
+          else fail(err);
+        });
+      } }, [
+        h("div", { class: "field" }, [h("label", { for: "as-teacher", text: "Teacher" }), teacherSel]),
+        h("div", { class: "field" }, [h("label", { for: "as-subject", text: "Subject" }), subjectInput,
+          h("datalist", { id: "as-subjects" }, subjects.map(function (x) { return h("option", { value: x }); }))]),
+        h("div", { class: "field field--full" }, [h("label", { for: "as-link", text: "Online class link (optional — the teacher can add it)" }), linkInput]),
+        h("div", { class: "field--full" }, [h("button", { type: "submit", class: "btn btn--gold", text: "Assign teacher" })])
+      ]);
+
+      body.replaceChildren(
+        h("div", { class: "detail-head" }, [h("span", { class: "student-id-badge", text: "Student ID " + s.student_id }),
+          subjects.length ? h("span", { class: "small-note", text: "Enrolled for: " + subjects.join(", ") }) : null]),
+        h("section", { class: "detail-block" }, [h("h3", { text: "Teachers" }), list]),
+        h("section", { class: "detail-block detail-actions" }, [h("h3", { text: "Assign a teacher" }), form])
+      );
+    }).catch(fail);
+  }
+
+  /* ---------- Teachers ---------- */
+  function teacherCredentialsBox(info) {
+    var portalUrl = new URL("login.html?role=faculty", location.href).href;
+    var subject = "Your Hope Education teacher account";
+    var message =
+      "Dear " + info.teacher_name + ",\n\n" +
+      "Your Hope Education teacher account is ready.\n\n" +
+      "Faculty ID: " + info.teacher_id + "\n" +
+      "Temporary password: " + info.temp_password + "\n\n" +
+      "Sign in (choose Faculty): " + portalUrl + "\n" +
+      "You will be asked to choose your own password the first time you sign in.\n\n" +
+      "Please keep these details private.\n\nHope Education";
+    var mailto = info.email ? "mailto:" + encodeURIComponent(info.email).replace(/%40/g, "@") +
+      "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(message) : null;
+
+    return h("div", { class: "credentials" }, [
+      h("h3", { text: "Send these login details to the teacher" }),
+      h("dl", null, [
+        h("dt", { text: "Faculty ID" }), h("dd", { text: info.teacher_id }),
+        h("dt", { text: "Temporary password" }), h("dd", { text: info.temp_password }),
+        h("dt", { text: "Email" }), h("dd", { text: info.email || "—" })
+      ]),
+      h("div", { class: "btn-row" }, [
+        mailto ? h("a", { class: "btn btn--gold btn--sm", href: mailto, text: "Email the teacher" }) : null,
+        h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Copy message", onclick: function (e) {
+          navigator.clipboard.writeText(message).then(function () {
+            e.target.textContent = "Copied";
+          }, function () { toast("Could not copy. Select the details and copy them by hand.", true); });
+        } })
+      ]),
+      h("p", { class: "small-note", text: "The password is shown only this once and is not stored in readable form. " +
+        "If it is lost, use Teachers → Reset password." })
+    ]);
+  }
+  function showTeacherCredentials(info) {
+    $("#dlg-title").textContent = info.teacher_name;
+    $("#dlg-body").replaceChildren(teacherCredentialsBox(info));
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function loadTeachers() {
+    var box = $("#teacher-list");
+    box.replaceChildren(emptyState("Loading…"));
+    Promise.all([
+      rest("teachers?select=teacher_id,teacher_name,email,active,last_login_at,must_change_password&order=teacher_name.asc"),
+      rest("teacher_students?select=teacher_id,student_id")
+    ]).then(function (res) {
+      var rows = res[0];
+      var counts = {};
+      res[1].forEach(function (a) {
+        counts[a.teacher_id] = counts[a.teacher_id] || {};
+        counts[a.teacher_id][a.student_id] = true;
+      });
+      if (!rows.length) { box.replaceChildren(emptyState("No teachers yet. Add one above.")); return; }
+      box.replaceChildren(h("table", { class: "admin-table" }, [
+        h("thead", null, [h("tr", null, ["Faculty ID", "Name", "Email", "Students", "Last sign-in", "Status", ""].map(function (t) { return h("th", { text: t }); }))]),
+        h("tbody", null, rows.map(function (tc) {
+          return h("tr", null, [
+            h("td", null, [h("strong", { text: tc.teacher_id })]),
+            h("td", { text: tc.teacher_name }),
+            h("td", { text: orDash(tc.email) }),
+            h("td", { text: String(Object.keys(counts[tc.teacher_id] || {}).length) }),
+            h("td", { text: tc.last_login_at ? fmtDate(tc.last_login_at) : "Never" }),
+            h("td", null, [h("span", { class: "status-pill " + (tc.active ? "status-active" : "status-inactive"), text: tc.active ? "Active" : "Turned off" })]),
+            h("td", null, [h("div", { class: "btn-row" }, [
+              h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Reset password", onclick: function (e) {
+                if (!confirm("Give " + tc.teacher_name + " a new temporary password?\nTheir old password stops working and they are signed out.")) return;
+                e.target.disabled = true;
+                rest("rpc/admin_reset_teacher_password", "POST", { p_teacher_id: tc.teacher_id }).then(function (info) {
+                  showTeacherCredentials(info); loadTeachers();
+                }).catch(function (err) { e.target.disabled = false; fail(err); });
+              } }),
+              h("button", { type: "button", class: "btn btn--outline btn--sm", text: tc.active ? "Turn off" : "Turn on", onclick: function (e) {
+                if (tc.active && !confirm("Turn off " + tc.teacher_name + "'s account?\nThey are signed out and can't sign in until you turn it on again. " +
+                                          "Their students stay assigned.")) return;
+                e.target.disabled = true;
+                rest("teachers?teacher_id=eq." + encodeURIComponent(tc.teacher_id) + "&select=teacher_id", "PATCH",
+                     { active: !tc.active }, "return=representation").then(function (r) {
+                  if (!r || !r.length) throw new Error("Not saved — you may not have permission.");
+                  toast(tc.teacher_name + (tc.active ? " is turned off." : " is turned on."));
+                  loadTeachers();
+                }).catch(function (err) { e.target.disabled = false; fail(err); });
+              } })
+            ])])
+          ]);
+        }))
+      ]));
+    }).catch(fail);
+  }
+
+  $("#teacher-add").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var id = $("#tch-id").value.trim(), name = $("#tch-name").value.trim(), email = $("#tch-email").value.trim();
+    if (!/^[A-Za-z0-9_-]{2,30}$/.test(id)) { toast("Faculty ID: 2–30 letters, numbers, - or _ (no spaces).", true); return; }
+    if (!name) { toast("Enter the teacher's name.", true); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast("Check the email address.", true); return; }
+    var btn = ev.target.querySelector("button[type=submit]");
+    btn.disabled = true;
+    rest("rpc/admin_create_teacher", "POST", { p_teacher_id: id, p_teacher_name: name, p_email: email || null }).then(function (info) {
+      ev.target.reset();
+      toast(info.teacher_name + " added.");
+      showTeacherCredentials(info);
+      loadTeachers();
+    }).catch(fail).then(function () { btn.disabled = false; });
+  });
 
   /* ---------- Student chat moderation ---------- */
   function loadChat() {
@@ -539,7 +735,7 @@
     }).catch(fail).then(function () { btn.disabled = false; });
   });
 
-  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, chat: loadChat, website: loadWebsite };
+  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, teachers: loadTeachers, chat: loadChat, website: loadWebsite };
 
   /* ---------- Start ---------- */
   session = readSession();

@@ -322,5 +322,35 @@ window.HOPE_MY = {
 
   /* ---------- Password eye button ---------- */
   "Show password": "စကားဝှက် ပြရန်",
-  "Hide password": "စကားဝှက် ဖျောက်ရန်"
+  "Hide password": "စကားဝှက် ဖျောက်ရန်",
+
+  /* ---------- Teacher portal ---------- */
+  "Teacher Portal | Hope Online Tuition School": "ဆရာ ပေါ်တယ် | Hope Online Tuition School",
+  "Teacher portal": "ဆရာ ပေါ်တယ်",
+  "My students": "ကျွန်ုပ်၏ ကျောင်းသားများ",
+  "Refresh": "ပြန်လည်ရယူရန်",
+  "Loading…": "ဖွင့်နေသည်…",
+  "Could not load your students. Please try again.": "ကျောင်းသားများကို မဖွင့်နိုင်ပါ။ ထပ်ကြိုးစားပါ။",
+  "No students yet. An admin will assign students to you.": "ကျောင်းသား မရှိသေးပါ။ စီမံသူက ကျောင်းသားများ သတ်မှတ်ပေးပါမည်။",
+  "Online class link (Zoom, Google Meet…)": "အွန်လိုင်း အတန်းလင့်ခ် (Zoom, Google Meet…)",
+  "Save link": "လင့်ခ် သိမ်းရန်",
+  "Open class": "အတန်း ဖွင့်ရန်",
+  "The class link must start with https://": "အတန်းလင့်ခ်သည် https:// ဖြင့် စရပါမည်",
+  "Could not save the link.": "လင့်ခ်ကို မသိမ်းနိုင်ပါ။",
+  "Class link saved. Your student can see it now.": "အတန်းလင့်ခ် သိမ်းပြီးပါပြီ။ ကျောင်းသား ယခု မြင်နိုင်ပါပြီ။",
+  "Class link removed.": "အတန်းလင့်ခ် ဖယ်ရှားပြီးပါပြီ။",
+  "This student is not assigned to you.": "ဤကျောင်းသားကို သင့်ထံ သတ်မှတ်ထားခြင်း မရှိပါ။",
+  "Email": "အီးမေးလ်",
+  "Curriculum": "သင်ရိုး",
+  "School year": "ကျောင်းနှစ်",
+  "Package": "ပက်ကေ့ချ်",
+  "Preferred times": "နှစ်သက်သော အချိန်များ",
+  "Goal": "ရည်မှန်းချက်",
+  "Needs help with": "အကူအညီ လိုအပ်သည့်အရာ",
+
+  /* ---------- Student portal: my classes ---------- */
+  "My classes": "ကျွန်ုပ်၏ အတန်းများ",
+  "Teacher": "ဆရာ",
+  "Join class": "အတန်းဝင်ရန်",
+  "Class link coming soon": "အတန်းလင့်ခ် မကြာမီ ရပါမည်"
 };

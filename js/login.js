@@ -3,8 +3,8 @@
    Choose Student or Faculty, then sign in. On success the session token is saved
    for this browser tab and the person is taken to their portal:
      Student → student.html
-     Faculty → admin.html   (admins sign in with their Admin ID as their Faculty ID;
-                              teacher accounts will also sign in here once they exist)
+     Faculty → admin.html for admins, teacher.html for teachers
+               (faculty_login() in supabase/005_teachers.sql decides which)
    The portals send people back here if they are not signed in, and back to the
    main website when they sign out.
 
@@ -19,10 +19,20 @@
     student: { rpc: "student_login", idArg: "p_student_id", key: "hope-student-session", page: "student.html",
                idPattern: /^\d{6,12}$/, missing: "Enter your Student ID and password.",
                wrong: "Wrong Student ID or password." },
-    faculty: { rpc: "admin_login", idArg: "p_admin_id", key: "hope-admin-session", page: "admin.html",
+    // faculty_login checks admins first, then teachers, and says which ("role") in its answer.
+    faculty: { rpc: "faculty_login", idArg: "p_faculty_id",
                idPattern: /^[A-Za-z0-9_-]{2,30}$/, missing: "Enter your Faculty ID and password.",
                wrong: "Wrong Faculty ID or password." }
   };
+  var FACULTY = {
+    admin:   { key: "hope-admin-session",   page: "admin.html" },
+    teacher: { key: "hope-teacher-session", page: "teacher.html" }
+  };
+  // Where a successful sign-in (or an existing session) should go.
+  function target(r, res) {
+    if (r === "student") return { key: "hope-student-session", page: "student.html" };
+    return FACULTY[res && res.role === "admin" ? "admin" : "teacher"];
+  }
 
   var form = document.getElementById("login-form");
   var idInput = document.getElementById("login-id");
@@ -85,10 +95,11 @@
           btn.disabled = false;
           return;
         }
-        try { sessionStorage.setItem(cfg.key, JSON.stringify({ token: res.token, expires_at: res.expires_at })); }
+        var dest = target(role, res);
+        try { sessionStorage.setItem(dest.key, JSON.stringify({ token: res.token, expires_at: res.expires_at })); }
         catch (e) { /* the portal will ask to sign in again */ }
         pwInput.value = "";
-        location.replace(cfg.page);
+        location.replace(dest.page);
       })
       .catch(function (err) {
         console.error(err);
@@ -103,7 +114,11 @@
     showError("Your session has ended. Please sign in again.");
   } else {
     // Already signed in on this tab? Go straight to the portal.
-    var s = readSession(ROLES[role].key);
-    if (s && s.token && new Date(s.expires_at).getTime() > Date.now()) location.replace(ROLES[role].page);
+    var places = role === "student" ? [target("student")] : [FACULTY.admin, FACULTY.teacher];
+    places.some(function (p) {
+      var s = readSession(p.key);
+      if (s && s.token && new Date(s.expires_at).getTime() > Date.now()) { location.replace(p.page); return true; }
+      return false;
+    });
   }
 })();

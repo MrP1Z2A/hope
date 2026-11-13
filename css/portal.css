@@ -1,4 +1,4 @@
-/* Hope Education — shared styles for the admin and student portals (admin.html, student.html). */
+/* Hope Education — shared styles for the sign-in page and the admin, teacher and student portals. */
 
 .admin-page { background: var(--cream); }
 .admin-main { max-width: 1180px; margin: 0 auto; padding: 32px 24px 64px; }
@@ -170,3 +170,39 @@ a.login-logo { display: block; }
 .role-tabs button:hover { color: var(--navy); }
 .role-tabs button[aria-checked="true"] { background: var(--navy); color: var(--white); }
 .role-tabs button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- Teacher portal: my students ---------- */
+.portal-section-title { margin: 0; font-size: 1.4rem; flex: 1; }
+.teacher-students { display: grid; gap: 16px; }
+.teacher-student { padding: 22px 24px; display: grid; gap: 16px; }
+.teacher-student-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.teacher-student-head h3 { margin: 0 0 2px; font-size: 1.25rem; }
+.subject-pill { padding: 4px 14px; border-radius: 999px; background: var(--gold-light); color: #7a5c14; font-weight: 800; font-size: 0.85rem; }
+.teacher-student-info { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; margin: 0; }
+.teacher-student-info dt { color: var(--muted); font-weight: 700; font-size: 0.9rem; }
+.teacher-student-info dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.teacher-student-link { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--line); }
+.class-link-form { flex: 1; min-width: 240px; display: grid; gap: 6px; }
+.class-link-form .inline-row input { flex: 1; }
+
+/* Student portal: my classes */
+.my-classes { padding: 18px 24px; margin-bottom: 20px; display: grid; gap: 10px; }
+.my-classes h2 { margin: 0; font-size: 1.3rem; }
+.class-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0; border-top: 1px solid var(--line); }
+.class-row strong { display: block; color: var(--navy); }
+
+/* Admin: assignments and teachers */
+.assign-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.assign-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--white); border: 1px solid var(--line); }
+.assign-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.assign-form .field--full { grid-column: 1 / -1; }
+.teacher-add { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 12px; align-items: end; padding: 18px; margin-bottom: 16px; }
+.teacher-add h3 { grid-column: 1 / -1; margin: 0; }
+.cell-list { margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+.status-inactive { background: #fdf0ee; color: #a93226; }
+
+@media (max-width: 760px) {
+  .teacher-student-info { grid-template-columns: 1fr; gap: 2px; }
+  .teacher-student-info dd { margin-bottom: 8px; }
+  .assign-form, .teacher-add { grid-template-columns: 1fr; }
+}

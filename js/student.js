@@ -116,6 +116,48 @@
     $("#s-hello").textContent = t("Hello") + ", " + me.student_name;
     $("#s-who").textContent = t("Student ID") + ": " + me.student_id;
     show("#s-dash");
+    loadClasses();
+  }
+
+  /* ---------- My classes (teachers and class links, set in the admin and teacher portals) ---------- */
+  var classes = [];
+  function loadClasses() {
+    rpc("student_my_teachers", {}, true).then(function (rows) {
+      classes = rows || [];
+      renderClasses();
+    }).catch(function (err) { if (err.message !== "signed out") console.error(err); });
+  }
+  function renderClasses() {
+    var box = $("#s-class-list");
+    $("#s-classes").hidden = !classes.length;
+    box.replaceChildren.apply(box, classes.map(function (c) {
+      var row = document.createElement("div");
+      row.className = "class-row";
+      var text = document.createElement("div");
+      var subject = document.createElement("strong");
+      subject.textContent = c.subject;
+      var teacher = document.createElement("span");
+      teacher.className = "small-note";
+      teacher.textContent = t("Teacher") + ": " + c.teacher_name;
+      text.appendChild(subject);
+      text.appendChild(teacher);
+      row.appendChild(text);
+      if (/^https:\/\/[^\s<>"]+$/i.test(c.class_link || "")) {
+        var a = document.createElement("a");
+        a.className = "btn btn--gold btn--sm";
+        a.href = c.class_link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = t("Join class");
+        row.appendChild(a);
+      } else {
+        var none = document.createElement("span");
+        none.className = "small-note";
+        none.textContent = t("Class link coming soon");
+        row.appendChild(none);
+      }
+      return row;
+    }));
   }
 
   // Re-write the greeting when the language is switched (main.js handles the fixed text).
@@ -124,6 +166,7 @@
       if (me && !$("#s-dash").hidden) {
         $("#s-hello").textContent = t("Hello") + ", " + me.student_name;
         $("#s-who").textContent = t("Student ID") + ": " + me.student_id;
+        renderClasses();
       }
     });
   });
