@@ -735,7 +735,87 @@
     }).catch(fail).then(function () { btn.disabled = false; });
   });
 
-  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, teachers: loadTeachers, chat: loadChat, website: loadWebsite };
+  /* ---------- Attendance ---------- */
+  var LESSON_STATUS = {
+    scheduled: "Scheduled", attended: "Attended", late: "Late", absent_approved: "Approved absence",
+    absent_unapproved: "Unapproved absence", absent_emergency: "Emergency absence", cancelled: "Cancelled"
+  };
+  var PACKAGE_LESSONS = { starter: 4, focus: 8, exam: 12 };
+  function monthValue(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+  $("#att-month").value = monthValue(new Date());
+  $("#att-month").addEventListener("change", loadAttendance);
+
+  function rateBadge(rate) {
+    if (rate === null || rate === undefined) return h("span", { class: "small-note", text: "—" });
+    var r = Number(rate);
+    return h("span", { class: "status-pill " + (r >= 80 ? "status-active" : r >= 75 ? "status-payment-pending" : "status-payment-failed"), text: r + "%" });
+  }
+
+  function loadAttendance() {
+    var box = $("#att-list");
+    var m = $("#att-month").value || monthValue(new Date());
+    box.replaceChildren(emptyState("Loading…"));
+    rest("rpc/admin_attendance", "POST", { p_month: m + "-01" }).then(function (rows) {
+      if (m === monthValue(new Date())) setCount("#flag-count", rows.filter(function (r) { return r.flag; }).length);
+      if (!rows.length) { box.replaceChildren(emptyState("No students yet.")); return; }
+      box.replaceChildren(h("table", { class: "admin-table" }, [
+        h("thead", null, [h("tr", null, ["Student", "Lessons booked", "Attended", "Absences", "Rate", "Last month", "Action needed"]
+          .map(function (x) { return h("th", { text: x }); }))]),
+        h("tbody", null, rows.map(function (r) {
+          var planned = PACKAGE_LESSONS[r.package];
+          return h("tr", { tabindex: "0", onclick: function () { openLessons(r, m); },
+                           onkeydown: function (e) { if (e.key === "Enter") openLessons(r, m); } }, [
+            h("td", null, [h("strong", { text: r.student_name }), h("br"), h("small", { text: "Student ID " + r.student_id })]),
+            h("td", { text: r.scheduled + (planned ? " of " + planned : "") }),
+            h("td", { text: r.attended + " of " + r.counted + " marked" }),
+            h("td", { text: "Approved " + r.approved + (r.approved > 2 ? " (over 2)" : "") +
+                            " · Unapproved " + r.unapproved + (r.emergency ? " · Emergency " + r.emergency : "") }),
+            h("td", null, [rateBadge(r.rate)]),
+            h("td", null, [rateBadge(r.prev_rate)]),
+            h("td", null, [r.flag ? h("span", { class: "status-pill status-payment-failed", text: r.flag }) : h("small", { text: "—" })])
+          ]);
+        }))
+      ]));
+    }).catch(fail);
+  }
+
+  /* Lessons of one student in a month; admins can correct the status. */
+  function openLessons(r, month) {
+    var body = $("#dlg-body");
+    $("#dlg-title").textContent = r.student_name + " – " + month;
+    body.replaceChildren(emptyState("Loading…"));
+    if (!dialog.open) dialog.showModal();
+    var from = new Date(month + "-01T00:00:00"), to = new Date(from);
+    to.setMonth(to.getMonth() + 1);
+    rest("lessons?select=id,subject,starts_at,duration_min,status,makeup_for,absence_reason,teacher_note,teachers(teacher_name)" +
+         "&student_id=eq." + r.student_id + "&starts_at=gte." + encodeURIComponent(from.toISOString()) +
+         "&starts_at=lt." + encodeURIComponent(to.toISOString()) + "&order=starts_at.asc").then(function (rows) {
+      if (!rows.length) { body.replaceChildren(emptyState("No lessons this month.")); return; }
+      body.replaceChildren(h("ul", { class: "assign-list" }, rows.map(function (l) {
+        var sel = h("select", { "aria-label": "Status" }, Object.keys(LESSON_STATUS).map(function (k) {
+          return h("option", { value: k, selected: k === l.status, text: LESSON_STATUS[k] });
+        }));
+        return h("li", { class: "admin-lesson" }, [
+          h("div", null, [
+            h("strong", { text: fmtDate(l.starts_at) + " · " + l.subject }),
+            h("br"),
+            h("small", { text: "Teacher: " + ((l.teachers && l.teachers.teacher_name) || "—") + " · " + l.duration_min + " min" +
+              (l.makeup_for ? " · make-up lesson" : "") }),
+            l.absence_reason ? h("p", { class: "small-note", text: "Student's reason: " + l.absence_reason }) : null,
+            l.teacher_note ? h("p", { class: "small-note", text: "Teacher's note: " + l.teacher_note }) : null
+          ]),
+          h("div", { class: "inline-row" }, [sel, h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Save", onclick: function (e) {
+            e.target.disabled = true;
+            updateRow("lessons", l.id, { status: sel.value, marked_at: new Date().toISOString() }).then(function () {
+              toast("Lesson updated."); loadAttendance();
+            }).catch(fail).then(function () { e.target.disabled = false; });
+          } })])
+        ]);
+      })));
+    }).catch(fail);
+  }
+
+  var loaders = { enrolments: loadEnrolments, messages: loadMessages, students: loadStudents, teachers: loadTeachers, attendance: loadAttendance, chat: loadChat, website: loadWebsite };
 
   /* ---------- Start ---------- */
   session = readSession();

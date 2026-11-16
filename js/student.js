@@ -117,6 +117,158 @@
     $("#s-who").textContent = t("Student ID") + ": " + me.student_id;
     show("#s-dash");
     loadClasses();
+    loadLessons();
+  }
+
+  /* ---------- My lessons and the Absence Form ---------- */
+  var STATUS = {
+    scheduled: "Scheduled", attended: "Attended", late: "Late", absent_approved: "Approved absence",
+    absent_unapproved: "Unapproved absence", absent_emergency: "Emergency absence", cancelled: "Cancelled"
+  };
+  var DAY = 24 * 3600 * 1000;
+  var myLessons = [], myAttendance = null;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function fmtWhen(iso, mins) {
+    var d = new Date(iso), end = new Date(d.getTime() + mins * 60000);
+    var loc = document.documentElement.lang === "my" ? "my-MM" : undefined;
+    return d.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "short" }) + " · " +
+      d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" }) + "–" +
+      end.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
+  }
+  function monthStart() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-01";
+  }
+
+  function loadLessons() {
+    var now = Date.now();
+    return Promise.all([
+      rpc("student_lessons", { p_from: new Date(now - 35 * DAY).toISOString(), p_to: new Date(now + 60 * DAY).toISOString() }, true),
+      rpc("student_attendance", { p_month: monthStart() }, true)
+    ]).then(function (res) {
+      myLessons = res[0] || [];
+      myAttendance = res[1];
+      renderLessons();
+    }).catch(function (err) { if (err.message !== "signed out") console.error(err); });
+  }
+
+  function lessonCard(l, upcoming) {
+    var card = el("article", "card lesson-row");
+    var main = el("div", "lesson-main");
+    var left = el("div");
+    left.appendChild(el("strong", "lesson-when", fmtWhen(l.starts_at, l.duration_min)));
+    left.appendChild(el("span", "lesson-who", l.subject + " · " + t("Teacher") + ": " + l.teacher_name));
+    var side = el("div", "lesson-side");
+    side.appendChild(el("span", "status-pill lesson-" + l.status, t(STATUS[l.status] || l.status)));
+    var start = new Date(l.starts_at).getTime(), end = start + l.duration_min * 60000;
+    if (upcoming && l.status === "scheduled" && /^https:\/\/[^\s<>"]+$/i.test(l.class_link || "")) {
+      var a = el("a", "btn btn--gold btn--sm", t("Join class"));
+      a.href = l.class_link; a.target = "_blank"; a.rel = "noopener";
+      side.appendChild(a);
+    }
+    main.appendChild(left);
+    main.appendChild(side);
+    card.appendChild(main);
+    if (l.makeup_for) card.appendChild(el("span", "small-note lesson-tag", t("Make-up lesson")));
+    if (l.absence_reason) card.appendChild(el("p", "lesson-reason small-note", t("Your reason") + ": " + l.absence_reason));
+    if (l.teacher_note) {
+      card.appendChild(el("span", "small-note lesson-tag", t("Note from your teacher")));
+      card.appendChild(el("p", "lesson-note", l.teacher_note));
+    }
+
+    // The Absence Form: only for lessons that haven't finished and aren't marked yet.
+    if (upcoming && l.status === "scheduled" && end > Date.now()) {
+      var btn = el("button", "btn btn--outline btn--sm", t("I can't attend"));
+      btn.type = "button";
+      btn.addEventListener("click", function () { btn.replaceWith(absenceForm(l, start)); });
+      card.appendChild(btn);
+    }
+    return card;
+  }
+
+  function absenceForm(l, start) {
+    var early = start - Date.now() >= DAY;
+    var f = el("form", "absence-form");
+    f.noValidate = true;
+    f.appendChild(el("p", null, early
+      ? t("You are telling us 24 hours or more before the lesson, so this is an approved absence (maximum 2 per month).")
+      : t("This lesson is less than 24 hours away, so it is an unapproved absence unless it is an emergency.")));
+    var id = "abs-" + l.id;
+    var lab = el("label", null, t("Reason"));
+    lab.htmlFor = id;
+    var reason = el("textarea");
+    reason.id = id; reason.rows = 2; reason.maxLength = 500; reason.required = true;
+    f.appendChild(lab); f.appendChild(reason);
+    var emergency = null;
+    if (!early) {
+      var emLab = el("label", "consent");
+      emergency = el("input");
+      emergency.type = "checkbox";
+      emLab.appendChild(emergency);
+      emLab.appendChild(el("span", null, t("This is an emergency (illness, family emergency, internet or power problem)")));
+      f.appendChild(emLab);
+    }
+    var err = el("p", "admin-error");
+    err.hidden = true;
+    f.appendChild(err);
+    var row = el("div", "btn-row");
+    var send = el("button", "btn btn--gold btn--sm", t("Send"));
+    send.type = "submit";
+    var back = el("button", "btn btn--outline btn--sm", t("Back"));
+    back.type = "button";
+    back.addEventListener("click", renderLessons);
+    row.appendChild(send); row.appendChild(back);
+    f.appendChild(row);
+    f.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      if (reason.value.trim().length < 3) { err.textContent = t("Please write the reason."); err.hidden = false; return; }
+      send.disabled = true;
+      rpc("student_report_absence", { p_lesson_id: l.id, p_reason: reason.value.trim(), p_emergency: !!(emergency && emergency.checked) }, true)
+        .then(function (res) {
+          if (!res || res.error) { err.textContent = t((res && res.error) || "Could not send. Please try again."); err.hidden = false; return; }
+          loadLessons();
+        }).catch(function (e) {
+          if (e.message !== "signed out") { err.textContent = t("Could not send. Please try again."); err.hidden = false; }
+        }).then(function () { send.disabled = false; });
+    });
+    setTimeout(function () { reason.focus(); }, 0);
+    return f;
+  }
+
+  function renderLessons() {
+    var now = Date.now();
+    // Upcoming = not finished yet (a cancelled future lesson stays here so the student sees it is off).
+    var upcoming = myLessons.filter(function (l) {
+      return new Date(l.starts_at).getTime() + l.duration_min * 60000 > now;
+    });
+    var recent = myLessons.filter(function (l) {
+      return new Date(l.starts_at).getTime() + l.duration_min * 60000 <= now;
+    }).reverse().slice(0, 10);
+    $("#s-lessons").hidden = !myLessons.length;
+
+    var line = $("#s-attendance");
+    line.replaceChildren();
+    if (myAttendance && myAttendance.counted) {
+      var r = Number(myAttendance.rate);
+      line.appendChild(el("span", "status-pill " + (r >= 80 ? "status-active" : r >= 75 ? "status-payment-pending" : "status-payment-failed"), r + "%"));
+      line.appendChild(el("span", null, t("Attendance this month") + ": " + myAttendance.attended + " / " + myAttendance.counted +
+        " · " + t("Keep at least 80%.")));
+    } else {
+      line.appendChild(el("span", null, t("Attendance this month") + ": —"));
+    }
+
+    var up = $("#s-upcoming");
+    up.replaceChildren.apply(up, upcoming.length ? upcoming.map(function (l) { return lessonCard(l, true); })
+                                                 : [el("p", "small-note", t("No upcoming lessons yet."))]);
+    var rc = $("#s-recent");
+    rc.replaceChildren.apply(rc, recent.length ? recent.map(function (l) { return lessonCard(l, false); })
+                                               : [el("p", "small-note", t("No lessons yet."))]);
   }
 
   /* ---------- My classes (teachers and class links, set in the admin and teacher portals) ---------- */
@@ -167,6 +319,7 @@
         $("#s-hello").textContent = t("Hello") + ", " + me.student_name;
         $("#s-who").textContent = t("Student ID") + ": " + me.student_id;
         renderClasses();
+        renderLessons();
       }
     });
   });

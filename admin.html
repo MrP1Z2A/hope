@@ -33,6 +33,7 @@
         <button type="button" role="tab" data-tab="messages" aria-selected="false">Messages <span class="tab-count" id="message-count" hidden></span></button>
         <button type="button" role="tab" data-tab="students" aria-selected="false">Students</button>
         <button type="button" role="tab" data-tab="teachers" aria-selected="false">Teachers</button>
+        <button type="button" role="tab" data-tab="attendance" aria-selected="false">Attendance <span class="tab-count" id="flag-count" hidden></span></button>
         <button type="button" role="tab" data-tab="chat" aria-selected="false">Student chat</button>
         <button type="button" role="tab" data-tab="website" aria-selected="false">Website</button>
       </nav>
@@ -87,6 +88,17 @@
           <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
         </div>
         <div class="table-wrap" id="teacher-list"></div>
+      </div>
+
+      <!-- Attendance -->
+      <div class="admin-panel" data-panel="attendance" hidden>
+        <div class="panel-bar">
+          <label for="att-month">Month</label>
+          <input id="att-month" type="month" class="month-input">
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <p class="small-note">Rate = lessons attended ÷ lessons marked (cancelled and make-up lessons not counted). Click a student to see and correct their lessons.</p>
+        <div class="table-wrap" id="att-list"></div>
       </div>
 
       <!-- Student chat moderation -->

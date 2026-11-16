@@ -59,12 +59,64 @@
         </div>
       </header>
 
-      <div class="panel-bar">
-        <h2 class="portal-section-title">My students</h2>
-        <button type="button" class="btn btn--outline btn--sm" id="t-refresh">Refresh</button>
-      </div>
+      <nav class="admin-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="lessons" aria-selected="true">Lessons <span class="tab-count" id="t-mark-count" hidden data-no-translate></span></button>
+        <button type="button" role="tab" data-tab="attendance" aria-selected="false">Attendance</button>
+        <button type="button" role="tab" data-tab="students" aria-selected="false">My students</button>
+      </nav>
       <p class="admin-error" id="t-error" role="alert" hidden data-no-translate></p>
-      <div id="t-students" class="teacher-students" data-no-translate></div>
+
+      <!-- Lessons -->
+      <div class="admin-panel" data-panel="lessons">
+        <form class="card lesson-add" id="lesson-add" novalidate>
+          <h3>Add lessons</h3>
+          <div class="field"><label for="la-student">Student</label><select id="la-student" required data-no-translate></select></div>
+          <div class="field"><label for="la-date">Date</label><input id="la-date" type="date" required></div>
+          <div class="field"><label for="la-time">Start time</label><input id="la-time" type="time" required></div>
+          <div class="field"><label for="la-length">Minutes</label><input id="la-length" type="number" min="15" max="240" step="5" value="90" required></div>
+          <div class="field"><label for="la-repeat">Repeat</label>
+            <select id="la-repeat">
+              <option value="1">Once</option>
+              <option value="4">Weekly for 4 weeks</option>
+              <option value="8">Weekly for 8 weeks</option>
+              <option value="12">Weekly for 12 weeks</option>
+            </select>
+          </div>
+          <div class="field"><label for="la-makeup">Make-up for</label><select id="la-makeup" data-no-translate></select></div>
+          <button type="submit" class="btn btn--gold">Add lessons</button>
+        </form>
+
+        <div class="panel-bar">
+          <h2 class="portal-section-title">Needs marking</h2>
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div id="t-to-mark" class="lesson-list" data-no-translate></div>
+
+        <h2 class="portal-section-title lesson-heading">Upcoming</h2>
+        <div id="t-upcoming" class="lesson-list" data-no-translate></div>
+
+        <h2 class="portal-section-title lesson-heading">Last 5 weeks</h2>
+        <div id="t-past" class="lesson-list" data-no-translate></div>
+      </div>
+
+      <!-- Attendance -->
+      <div class="admin-panel" data-panel="attendance" hidden>
+        <div class="panel-bar">
+          <label for="t-month">Month</label>
+          <input id="t-month" type="month" class="month-input">
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <p class="small-note">Attendance rate = lessons attended ÷ lessons marked. Cancelled and make-up lessons are not counted. Students should keep at least 80%.</p>
+        <div class="table-wrap" id="t-attendance" data-no-translate></div>
+      </div>
+
+      <!-- My students -->
+      <div class="admin-panel" data-panel="students" hidden>
+        <div class="panel-bar">
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div id="t-students" class="teacher-students" data-no-translate></div>
+      </div>
     </section>
   </main>
 

@@ -206,3 +206,48 @@ a.login-logo { display: block; }
   .teacher-student-info dd { margin-bottom: 8px; }
   .assign-form, .teacher-add { grid-template-columns: 1fr; }
 }
+
+/* ---------- Lessons and attendance (teacher and student portals) ---------- */
+.lesson-add { display: grid; grid-template-columns: 2fr 1fr 1fr 0.7fr 1.2fr 1.6fr; gap: 12px; align-items: end; padding: 18px; margin-bottom: 24px; }
+.lesson-add h3 { grid-column: 1 / -1; margin: 0; }
+.lesson-add .btn { grid-column: 1 / -1; justify-self: start; }
+.lesson-heading { margin: 26px 0 12px; }
+.lesson-list { display: grid; gap: 10px; }
+.lesson-row { padding: 14px 18px; display: grid; gap: 8px; }
+.lesson-main { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lesson-when { display: block; color: var(--navy); }
+.lesson-who { font-size: 0.92rem; color: var(--muted); }
+.lesson-side { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lesson-extra { display: grid; gap: 4px; }
+.lesson-extra p { margin: 0; font-size: 0.9rem; }
+.lesson-reason { color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.lesson-rule { color: #7a5c14; font-weight: 700; }
+.lesson-tag { font-weight: 700; }
+.lesson-note { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--cream); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.93rem; }
+.lesson-details summary { cursor: pointer; font-weight: 700; font-size: 0.9rem; color: var(--navy); }
+.lesson-mark { display: grid; grid-template-columns: 220px 1fr auto; gap: 12px; align-items: end; margin-top: 10px; }
+.lesson-mark-field { display: grid; gap: 4px; font-weight: 700; font-size: 0.85rem; color: var(--muted); }
+.lesson-mark textarea { min-height: 46px; }
+.month-input { width: auto; }
+.status-pill.lesson-attended { background: #e3f4e8; color: #1e6b3a; }
+.status-pill.lesson-late { background: #eef6e3; color: #4d6b1e; }
+.status-pill.lesson-absent_approved { background: var(--gold-light); color: #7a5c14; }
+.status-pill.lesson-absent_unapproved { background: #fdf0ee; color: #a93226; }
+.status-pill.lesson-absent_emergency { background: #f3eefd; color: #5a3aa9; }
+.status-pill.lesson-cancelled { background: #eceff3; color: #5c6675; text-decoration: line-through; }
+
+/* Student portal: my lessons */
+.my-lessons { padding: 18px 24px; margin-bottom: 20px; display: grid; gap: 14px; }
+.my-lessons h2 { margin: 0; font-size: 1.3rem; }
+.my-lessons h3 { margin: 6px 0 0; font-size: 1.05rem; }
+.attendance-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.92rem; color: var(--muted); }
+.absence-form { display: grid; gap: 10px; padding: 12px; border-radius: var(--radius-sm); background: var(--cream); }
+.absence-form p { margin: 0; font-size: 0.9rem; }
+
+@media (max-width: 900px) {
+  .lesson-add { grid-template-columns: 1fr 1fr; }
+  .lesson-mark { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .lesson-add { grid-template-columns: 1fr; }
+}
