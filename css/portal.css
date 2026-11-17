@@ -251,3 +251,39 @@ a.login-logo { display: block; }
 @media (max-width: 520px) {
   .lesson-add { grid-template-columns: 1fr; }
 }
+
+/* ---------- Homework, lesson requests and private messages ---------- */
+.request-form { display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 12px; align-items: end; }
+.request-form .field--full { grid-column: 1 / -1; }
+.homework-add { grid-template-columns: 2fr 2fr 1fr; }
+.homework-add .field--full { grid-column: 1 / -1; }
+.status-pill.request-pending { background: var(--gold-light); color: #7a5c14; }
+.status-pill.request-accepted { background: #e3f4e8; color: #1e6b3a; }
+.status-pill.request-declined { background: #fdf0ee; color: #a93226; }
+.status-pill.request-withdrawn { background: #eceff3; color: #5c6675; }
+.request-row .lesson-mark-field textarea { min-height: 46px; }
+.btn-link { font: inherit; font-weight: 700; background: none; border: 0; padding: 0; color: var(--navy); text-decoration: underline; cursor: pointer; justify-self: start; overflow-wrap: anywhere; text-align: left; }
+.homework-review { grid-template-columns: 1fr auto; }
+
+.dm-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
+.dm-threads { padding: 14px; display: grid; gap: 6px; }
+.dm-threads h2 { margin: 4px 6px 6px; font-size: 1.2rem; }
+.dm-thread {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
+  font: inherit; text-align: left; padding: 10px 12px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; cursor: pointer; color: var(--text);
+}
+.dm-thread:hover { background: var(--cream); }
+.dm-thread.is-open { background: var(--tint); border-color: var(--line); }
+.dm-thread strong { display: block; color: var(--navy); }
+.dm-thread small { color: var(--muted); }
+.dm-chat { height: min(70vh, 640px); }
+
+@media (max-width: 900px) {
+  .request-form, .homework-add { grid-template-columns: 1fr 1fr; }
+  .dm-layout { grid-template-columns: 1fr; }
+  .homework-review { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .request-form, .homework-add { grid-template-columns: 1fr; }
+}

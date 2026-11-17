@@ -60,7 +60,9 @@
       </header>
 
       <nav class="admin-tabs" role="tablist">
-        <button type="button" role="tab" data-tab="lessons" aria-selected="true">Lessons <span class="tab-count" id="t-mark-count" hidden data-no-translate></span></button>
+        <button type="button" role="tab" data-tab="lessons" aria-selected="true"><span>Lessons</span> <span class="tab-count" id="t-mark-count" hidden data-no-translate></span></button>
+        <button type="button" role="tab" data-tab="homework" aria-selected="false"><span>Homework</span> <span class="tab-count" id="t-review-count" hidden data-no-translate></span></button>
+        <button type="button" role="tab" data-tab="messages" aria-selected="false"><span>Messages</span> <span class="tab-count" id="t-unread-count" hidden data-no-translate></span></button>
         <button type="button" role="tab" data-tab="attendance" aria-selected="false">Attendance</button>
         <button type="button" role="tab" data-tab="students" aria-selected="false">My students</button>
       </nav>
@@ -68,6 +70,10 @@
 
       <!-- Lessons -->
       <div class="admin-panel" data-panel="lessons">
+        <section id="t-requests-box" hidden>
+          <h2 class="portal-section-title lesson-heading" style="margin-top:0">Lesson requests</h2>
+          <div id="t-requests" class="lesson-list" data-no-translate></div>
+        </section>
         <form class="card lesson-add" id="lesson-add" novalidate>
           <h3>Add lessons</h3>
           <div class="field"><label for="la-student">Student</label><select id="la-student" required data-no-translate></select></div>
@@ -99,6 +105,45 @@
         <div id="t-past" class="lesson-list" data-no-translate></div>
       </div>
 
+      <!-- Homework -->
+      <div class="admin-panel" data-panel="homework" hidden>
+        <form class="card lesson-add homework-add" id="hw-add" novalidate>
+          <h3>Set homework</h3>
+          <div class="field"><label for="hw-student">Student</label><select id="hw-student" required data-no-translate></select></div>
+          <div class="field"><label for="hw-title">Title</label><input id="hw-title" type="text" maxlength="200" required></div>
+          <div class="field"><label for="hw-due">Due date (optional)</label><input id="hw-due" type="date"></div>
+          <div class="field field--full"><label for="hw-details">Details (optional)</label><textarea id="hw-details" rows="3" maxlength="3000"></textarea></div>
+          <button type="submit" class="btn btn--gold">Set homework</button>
+        </form>
+        <div class="panel-bar">
+          <h2 class="portal-section-title">Handed in and waiting</h2>
+          <button type="button" class="btn btn--outline btn--sm" data-refresh>Refresh</button>
+        </div>
+        <div id="hw-review" class="lesson-list" data-no-translate></div>
+        <h2 class="portal-section-title lesson-heading">All homework</h2>
+        <div id="hw-all" class="lesson-list" data-no-translate></div>
+      </div>
+
+      <!-- Messages -->
+      <div class="admin-panel" data-panel="messages" hidden>
+        <div class="dm-layout">
+          <div class="card dm-threads" id="dm-threads" data-no-translate></div>
+          <div class="card chat-card dm-chat" id="dm-chat" hidden>
+            <div class="chat-head">
+              <h2 id="dm-title" data-no-translate></h2>
+              <p>Private messages with your student. Hope Education staff can read them to keep everyone safe.</p>
+            </div>
+            <div class="chat-list" id="dm-list" aria-live="polite" data-no-translate></div>
+            <p class="chat-error" id="dm-error" role="alert" hidden data-no-translate></p>
+            <form class="chat-form" id="dm-form" novalidate>
+              <label for="dm-input" class="visually-hidden">Message</label>
+              <textarea id="dm-input" maxlength="2000" required></textarea>
+              <button type="submit" class="btn btn--gold">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- Attendance -->
       <div class="admin-panel" data-panel="attendance" hidden>
         <div class="panel-bar">
@@ -125,6 +170,7 @@
   <script src="js/translations.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/portal-messages.js"></script>
   <script src="js/teacher.js"></script>
 </body>
 </html>

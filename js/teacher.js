@@ -140,6 +140,7 @@
     btn.addEventListener("click", function () {
       if (me && !$("#t-dash").hidden) {
         writeGreeting(); renderStudents(); fillStudentSelect(); renderLessons(); renderAttendance();
+        renderRequests(); renderHomework(); messages.render();
       }
     });
   });
@@ -152,10 +153,166 @@
       b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false");
     });
     document.querySelectorAll(".admin-panel").forEach(function (p) { p.hidden = p.dataset.panel !== name; });
-    if (name === "lessons") loadLessons();
+    if (name !== "messages") messages.stop();
+    if (name === "lessons") { loadLessons(); loadRequests(); }
+    else if (name === "homework") loadHomework();
+    else if (name === "messages") messages.load();
     else if (name === "attendance") loadAttendance();
     else loadStudents();
+    loadCounts();
   }
+
+  /* ---------- Tab badges ---------- */
+  var countsTimer = null;
+  function setCount(sel, n) { var c = $(sel); c.textContent = n; c.hidden = !n; }
+  function loadCounts() {
+    if (!me || $("#t-dash").hidden) return;
+    rpc("teacher_counts").then(function (c) {
+      setCount("#t-review-count", c.to_review);
+      setCount("#t-unread-count", c.unread);
+      requestCount = c.requests;
+      updateLessonsBadge();
+    }).catch(function () { /* badges only */ });
+    clearTimeout(countsTimer);
+    countsTimer = setTimeout(loadCounts, 30000);
+  }
+  var requestCount = 0, markCount = 0;
+  function updateLessonsBadge() { setCount("#t-mark-count", markCount + requestCount); }
+
+  /* ---------- Lesson requests from students ---------- */
+  var requests = [];
+  function loadRequests() {
+    return rpc("teacher_requests").then(function (rows) {
+      requests = rows || [];
+      requestCount = requests.length;
+      updateLessonsBadge();
+      renderRequests();
+    }).catch(function (err) { if (err.message !== "signed out") console.error(err); });
+  }
+  function renderRequests() {
+    var box = $("#t-requests");
+    $("#t-requests-box").hidden = !requests.length;
+    box.replaceChildren.apply(box, requests.map(function (r) {
+      var reply = h("textarea", { rows: "2", maxlength: "500", "aria-label": t("Reply to the student (optional)") });
+      function decide(accept, btn) {
+        btn.disabled = true;
+        rpc("teacher_decide_request", { p_request_id: r.id, p_accept: accept, p_reply: reply.value }).then(function (res) {
+          if (!res || res.error) {
+            toast(t((res && res.error) || "Could not save.") + (res && res.clash_at ? " " + fmtWhen(res.clash_at, r.duration_min) : ""), true);
+            return;
+          }
+          toast(t(accept ? "Lesson booked. The student can see it now." : "Request declined."));
+          loadRequests(); loadLessons();
+        }).catch(function (err) { if (err.message !== "signed out") toast(t("Could not save."), true); })
+          .then(function () { btn.disabled = false; });
+      }
+      var accept = h("button", { type: "button", class: "btn btn--gold btn--sm", text: t("Accept and book") });
+      var decline = h("button", { type: "button", class: "btn btn--outline btn--sm", text: t("Decline") });
+      accept.addEventListener("click", function () { decide(true, accept); });
+      decline.addEventListener("click", function () { decide(false, decline); });
+      return h("article", { class: "card lesson-row request-row" }, [
+        h("div", { class: "lesson-main" }, [
+          h("div", null, [
+            h("strong", { class: "lesson-when", text: fmtWhen(r.starts_at, r.duration_min) }),
+            h("span", { class: "lesson-who", text: r.student_name + " · " + r.subject })
+          ]),
+          h("span", { class: "status-pill request-pending", text: t("Request") })
+        ]),
+        r.makeup_for ? h("p", { class: "lesson-rule", text: t("Make-up for the absence on") + " " + fmtWhen(r.makeup_starts_at, r.duration_min).split(" · ")[0] }) : null,
+        r.message ? h("p", { class: "lesson-reason", text: t("Student's message") + ": " + r.message }) : null,
+        h("label", { class: "lesson-mark-field" }, [h("span", { text: t("Reply to the student (optional)") }), reply]),
+        h("div", { class: "btn-row" }, [accept, decline])
+      ]);
+    }));
+  }
+
+  /* ---------- Homework ---------- */
+  var homeworkRows = [];
+  function loadHomework() {
+    return rpc("teacher_homework").then(function (rows) { homeworkRows = rows || []; renderHomework(); })
+      .catch(function (err) { if (err.message !== "signed out") showError("#t-error", t("Could not load homework. Please try again.")); });
+  }
+
+  function openHomeworkFile(path) {
+    fetch(CFG.url + "/storage/v1/object/sign/homework-files/" + path.split("/").map(encodeURIComponent).join("/"), {
+      method: "POST",
+      headers: { apikey: CFG.publishableKey, "x-teacher-token": session.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresIn: 600 })
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("sign")); })
+      .then(function (res) { window.open(CFG.url + "/storage/v1" + (res.signedURL || res.signedUrl), "_blank", "noopener"); })
+      .catch(function () { toast(t("Could not open the file."), true); });
+  }
+
+  function homeworkCard(hw) {
+    var state = hw.reviewed_at ? ["Reviewed", "status-active"] : hw.submitted_at ? ["Handed in", "status-payment-pending"]
+              : (hw.due_at && new Date(hw.due_at).getTime() < Date.now()) ? ["Late", "status-payment-failed"] : ["To do", ""];
+    var kids = [
+      h("div", { class: "lesson-main" }, [
+        h("div", null, [
+          h("strong", { class: "lesson-when", text: hw.title }),
+          h("span", { class: "lesson-who", text: hw.student_name + " · " + hw.subject +
+            (hw.due_at ? " · " + t("Due") + " " + fmtWhen(hw.due_at, 0).split(" · ")[0] : "") })
+        ]),
+        h("span", { class: "status-pill " + state[1], text: t(state[0]) })
+      ]),
+      hw.details ? h("p", { class: "lesson-note", text: hw.details }) : null
+    ];
+    if (hw.submitted_at) {
+      kids.push(h("span", { class: "small-note lesson-tag", text: t("Student's answer") + " · " + fmtWhen(hw.submitted_at, 0).split(" · ")[0] }));
+      if (hw.body) kids.push(h("p", { class: "lesson-reason", text: hw.body }));
+      if (hw.file_path) kids.push(h("button", { type: "button", class: "btn-link", text: "📎 " + (hw.file_name || t("Attached file")),
+                                                  onclick: function () { openHomeworkFile(hw.file_path); } }));
+      var fb = h("textarea", { rows: "2", maxlength: "3000", "aria-label": t("Feedback for the student") });
+      fb.value = hw.feedback || "";
+      var save = h("button", { type: "submit", class: "btn btn--gold btn--sm", text: t(hw.reviewed_at ? "Update feedback" : "Mark as reviewed") });
+      kids.push(h("form", { class: "lesson-mark homework-review", novalidate: true, onsubmit: function (ev) {
+        ev.preventDefault();
+        save.disabled = true;
+        rpc("teacher_review_homework", { p_homework_id: hw.id, p_feedback: fb.value }).then(function (res) {
+          if (!res || res.error) { toast(t((res && res.error) || "Could not save."), true); return; }
+          toast(t("Saved.")); loadHomework(); loadCounts();
+        }).catch(function (err) { if (err.message !== "signed out") toast(t("Could not save."), true); })
+          .then(function () { save.disabled = false; });
+      } }, [h("label", { class: "lesson-mark-field lesson-mark-note" }, [h("span", { text: t("Feedback for the student") }), fb]), save]));
+    } else {
+      kids.push(h("button", { type: "button", class: "btn-link-danger", text: t("Delete homework"), onclick: function (e) {
+        if (!confirm(t("Delete this homework?"))) return;
+        e.target.disabled = true;
+        rpc("teacher_delete_homework", { p_homework_id: hw.id }).then(function (res) {
+          if (!res || res.error) { toast(t((res && res.error) || "Could not save."), true); return; }
+          loadHomework();
+        }).catch(function (err) { if (err.message !== "signed out") toast(t("Could not save."), true); });
+      } }));
+    }
+    return h("article", { class: "card lesson-row" }, kids);
+  }
+
+  function renderHomework() {
+    var waiting = homeworkRows.filter(function (x) { return x.submitted_at && !x.reviewed_at; });
+    var rest = homeworkRows.filter(function (x) { return !(x.submitted_at && !x.reviewed_at); });
+    var a = $("#hw-review"), b = $("#hw-all");
+    a.replaceChildren.apply(a, waiting.length ? waiting.map(homeworkCard) : [h("p", { class: "empty-state", text: t("Nothing to review.") })]);
+    b.replaceChildren.apply(b, rest.length ? rest.map(homeworkCard) : [h("p", { class: "empty-state", text: t("No homework set yet.") })]);
+    setCount("#t-review-count", waiting.length);
+  }
+
+  $("#hw-add").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var title = $("#hw-title").value.trim(), due = $("#hw-due").value;
+    if (!$("#hw-student").value) { toast(t("Choose a student."), true); return; }
+    if (!title) { toast(t("Write a short title."), true); return; }
+    var btn = ev.target.querySelector("button[type=submit]");
+    btn.disabled = true;
+    rpc("teacher_add_homework", { p_assignment_id: Number($("#hw-student").value), p_title: title,
+      p_details: $("#hw-details").value.trim(), p_due_at: due ? new Date(due + "T23:59:00").toISOString() : null })
+      .then(function (res) {
+        if (!res || res.error) { toast(t((res && res.error) || "Could not save."), true); return; }
+        toast(t("Homework set. The student can see it now."));
+        $("#hw-title").value = ""; $("#hw-details").value = ""; $("#hw-due").value = "";
+        loadHomework();
+      }).catch(function (err) { if (err.message !== "signed out") toast(t("Could not save."), true); })
+      .then(function () { btn.disabled = !students.length; });
+  });
   document.querySelectorAll(".admin-tabs [data-tab]").forEach(function (b) {
     b.addEventListener("click", function () { switchTab(b.dataset.tab); });
   });
@@ -260,9 +417,8 @@
     fillList("#t-to-mark", toMark, "Nothing to mark.");
     fillList("#t-upcoming", upcoming, "No upcoming lessons. Add some above.");
     fillList("#t-past", past, "No marked lessons yet.");
-    var c = $("#t-mark-count");
-    c.textContent = toMark.length;
-    c.hidden = !toMark.length;
+    markCount = toMark.length;
+    updateLessonsBadge();
   }
 
   /* Add lessons form */
@@ -274,6 +430,7 @@
     if (keep) sel.value = keep;
     $("#lesson-add button[type=submit]").disabled = !students.length;
     fillMakeupSelect();
+    fillHomeworkSelect();
   }
   function fillMakeupSelect() {
     var sel = $("#la-makeup"), keep = sel.value;
@@ -290,6 +447,15 @@
     if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
   }
   $("#la-student").addEventListener("change", fillMakeupSelect);
+  // The homework form uses the same student list.
+  function fillHomeworkSelect() {
+    var sel = $("#hw-student"), keep = sel.value;
+    sel.replaceChildren.apply(sel, students.map(function (s) {
+      return h("option", { value: String(s.assignment_id), text: s.student_name + " – " + s.subject });
+    }));
+    if (keep) sel.value = keep;
+    $("#hw-add button[type=submit]").disabled = !students.length;
+  }
   $("#la-makeup").addEventListener("change", function () {
     if ($("#la-makeup").value) $("#la-repeat").value = "1";
   });
@@ -487,6 +653,15 @@
   }
 
   /* ---------- Start ---------- */
+  // Private messages with students (js/portal-messages.js)
+  var messages = window.hopeMessages({
+    rpc: rpc,
+    t: t,
+    threadsRpc: "teacher_dm_threads",
+    idKey: "student_id",
+    nameKey: "student_name",
+    onUnread: function (n) { setCount("#t-unread-count", n); }
+  });
   session = readSession();
   if (session && session.token) {
     rpc("teacher_me").then(function (res) {
