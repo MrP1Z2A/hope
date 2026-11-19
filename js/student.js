@@ -137,6 +137,7 @@
     else if (name === "homework") { loadHomework(); loadNotes(); }
     else if (name === "messages") messages.load();
     else if (name === "attendance") loadMonth();
+    else if (name === "card") loadCard();
   }
   document.querySelectorAll(".admin-tabs [data-tab]").forEach(function (b) {
     b.addEventListener("click", function () { switchTab(b.dataset.tab); });
@@ -401,6 +402,58 @@
       return card;
     }));
   }
+
+  /* ---------- My student ID card (js/id-card.js) ---------- */
+  var cardInfo = null, cardPair = null;
+
+  function signedPhoto(path) {
+    return fetch(CFG.url + "/storage/v1/object/sign/student-photos/" + path.split("/").map(encodeURIComponent).join("/"), {
+      method: "POST",
+      headers: { apikey: CFG.publishableKey, "x-student-token": session.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresIn: 3600 })
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (res) { return res ? CFG.url + "/storage/v1" + (res.signedURL || res.signedUrl) : null; })
+      .catch(function () { return null; });
+  }
+
+  function loadCard() {
+    return rpc("student_card", {}, true).then(function (info) {
+      cardInfo = info;
+      return info.photo_path ? signedPhoto(info.photo_path) : null;
+    }).then(function (url) {
+      cardPair = window.hopeIdCard(cardInfo, url);
+      $("#card-box").replaceChildren(cardPair);
+      $("#card-photo-form").hidden = !!cardInfo.photo_path;
+      $("#card-print").hidden = !cardInfo.photo_path;
+    }).catch(function (err) { if (err.message !== "signed out") console.error(err); });
+  }
+
+  $("#card-print").addEventListener("click", function () { if (cardPair) window.hopePrintIdCard(cardPair); });
+
+  $("#card-photo-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var err = $("#card-photo-error");
+    var fail = function (msg) { err.textContent = t(msg); err.hidden = false; };
+    err.hidden = true;
+    var file = $("#card-photo").files[0];
+    if (!file) { fail("Please choose a photo (JPG, PNG or WEBP)."); return; }
+    var btn = ev.target.querySelector("button[type=submit]");
+    btn.disabled = true;
+    window.hopeIdPhoto(file)
+      .then(function (jpg) { return window.hopeUpload("student-photos", jpg); })
+      .then(function (path) { return rpc("student_set_photo", { p_path: path }, true); })
+      .then(function (res) {
+        if (!res || res.error) { fail((res && res.error) || "Could not save the photo."); return; }
+        toast(t("Photo saved. Your ID card is ready."));
+        loadCard();
+      })
+      .catch(function (e) {
+        if (e.message === "signed out") return;
+        fail(e.message === "type" ? "Please choose a photo (JPG, PNG or WEBP)." :
+             e.message === "small" ? "This photo is too small. Please choose a bigger one." : "Could not save the photo.");
+      })
+      .then(function () { btn.disabled = false; });
+  });
 
   /* ---------- Attendance history ---------- */
   var RULE = {

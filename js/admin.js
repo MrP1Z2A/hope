@@ -116,6 +116,13 @@
       });
   }
 
+  /* A private file link that works for a while (receipts, ID photos). */
+  function signedUrl(bucket, path, seconds) {
+    return api("/storage/v1/object/sign/" + bucket + "/" + path.split("/").map(encodeURIComponent).join("/"), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: seconds || 600 })
+    }).then(function (res) { return CFG.url + "/storage/v1" + (res.signedURL || res.signedUrl); });
+  }
+
   /* ---------- Sign in / out (signing in happens on login.html) ---------- */
   function goToLogin(ended) {
     location.replace("login.html?role=faculty" + (ended ? "&ended=1" : ""));
@@ -317,6 +324,14 @@
         });
       }
 
+      // Photo for the ID card (check it shows the student's face before accepting)
+      var photoBox = h("div", { class: "receipt-box enrol-photo" }, [emptyState(r.photo_path ? "Loading photo…" : "No photo uploaded (enrolled before ID cards).")]);
+      if (r.photo_path) {
+        signedUrl("student-photos", r.photo_path).then(function (url) {
+          photoBox.replaceChildren(h("img", { src: url, alt: "ID card photo of " + r.student_name }));
+        }).catch(function (err) { photoBox.replaceChildren(emptyState("Could not load photo: " + err.message)); });
+      }
+
       // Actions
       var actions = h("section", { class: "detail-block detail-actions" }, [h("h3", { text: "Actions" })]);
       if (r.status !== "Active") {
@@ -384,6 +399,7 @@
             h("dt", { text: "Payment sent" }), h("dd", { text: fmtDate(r.payment_submitted_at) }),
             h("dt", { text: "Payment verified" }), h("dd", { text: fmtDate(r.payment_verified_at) })
           ])]),
+        h("section", { class: "detail-block" }, [h("h3", { text: "Photo for the ID card" }), photoBox]),
         actions,
         detailList("Student", [
           ["Name", r.student_name], ["Email", r.email], ["Phone / WhatsApp", r.phone],
@@ -460,6 +476,7 @@
             h("td", { text: s.last_login_at ? fmtDate(s.last_login_at) : "Never" }),
             h("td", null, [h("div", { class: "btn-row" }, [
               h("button", { type: "button", class: "btn btn--gold btn--sm", text: "Assign teacher", onclick: function () { openAssign(s); } }),
+              h("button", { type: "button", class: "btn btn--outline btn--sm", text: "ID card", onclick: function () { openCard(s.student_id); } }),
               h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Reset password", onclick: function (e) {
               if (!confirm("Give " + s.student_name + " a new temporary password?\nTheir old password stops working and they are signed out.")) return;
               e.target.disabled = true;
@@ -473,6 +490,71 @@
           ]);
         }))
       ]));
+    }).catch(fail);
+  }
+
+  /* ---------- Student ID card: view, print, change photo or validity ---------- */
+  function openCard(studentId) {
+    var body = $("#dlg-body");
+    $("#dlg-title").textContent = "ID card";
+    body.replaceChildren(emptyState("Loading…"));
+    if (!dialog.open) dialog.showModal();
+    Promise.all([
+      rest("students?select=student_id,student_name,photo_path,card_issued_at,card_valid_until&student_id=eq." + studentId),
+      rest("teacher_students?select=subject&student_id=eq." + studentId + "&order=subject.asc"),
+      rest("enrolments?select=subjects&student_id=eq." + studentId + "&order=created_at.desc&limit=1")
+    ]).then(function (res) {
+      var s = res[0][0];
+      if (!s) { body.replaceChildren(emptyState("Student not found.")); return; }
+      var subjects = res[1].map(function (a) { return a.subject; }).filter(function (x, i, arr) { return arr.indexOf(x) === i; });
+      if (!subjects.length && res[2][0]) subjects = res[2][0].subjects || [];
+      $("#dlg-title").textContent = "ID card – " + s.student_name;
+      return (s.photo_path ? signedUrl("student-photos", s.photo_path, 3600) : Promise.resolve(null)).then(function (url) {
+        var info = { student_id: s.student_id, student_name: s.student_name, subjects: subjects.join(", "),
+                     card_valid_until: s.card_valid_until, card_issued_at: s.card_issued_at };
+        var pair = window.hopeIdCard(info, url);
+
+        var fileInput = h("input", { type: "file", id: "card-new-photo", accept: "image/jpeg,image/png,image/webp" });
+        var validInput = h("input", { type: "date", id: "card-valid" });
+        validInput.value = s.card_valid_until || "";
+
+        var save = h("button", { type: "submit", class: "btn btn--gold btn--sm", text: "Save card" });
+        var form = h("form", { class: "assign-form", novalidate: true, onsubmit: function (ev) {
+          ev.preventDefault();
+          var file = fileInput.files[0];
+          if (!file && !validInput.value) { toast("Choose a new photo or a date.", true); return; }
+          save.disabled = true;
+          (file ? window.hopeIdPhoto(file).then(function (jpg) { return window.hopeUpload("student-photos", jpg); }) : Promise.resolve(null))
+            .then(function (path) {
+              var changes = {};
+              if (path) changes.photo_path = path;
+              if (validInput.value) changes.card_valid_until = validInput.value;
+              if (!s.card_issued_at) changes.card_issued_at = new Date().toISOString();
+              return rest("students?student_id=eq." + s.student_id + "&select=student_id", "PATCH", changes, "return=representation");
+            }).then(function (rows) {
+              if (!rows || !rows.length) throw new Error("Not saved — you may not have permission.");
+              toast("ID card saved."); openCard(s.student_id);
+            }).catch(function (err) {
+              save.disabled = false;
+              if (err.message === "type") toast("Use a JPG, PNG or WEBP photo.", true);
+              else if (err.message === "small") toast("This photo is too small.", true);
+              else fail(err);
+            });
+        } }, [
+          h("div", { class: "field" }, [h("label", { for: "card-new-photo", text: s.photo_path ? "Change photo" : "Add photo" }), fileInput]),
+          h("div", { class: "field" }, [h("label", { for: "card-valid", text: "Valid until" }), validInput]),
+          h("div", { class: "field--full" }, [save])
+        ]);
+
+        body.replaceChildren(
+          pair,
+          h("div", { class: "btn-row", style: "justify-content:center" }, [
+            h("button", { type: "button", class: "btn btn--outline btn--sm", text: "Print card", disabled: !s.photo_path,
+                          onclick: function () { window.hopePrintIdCard(pair); } })
+          ]),
+          h("section", { class: "detail-block detail-actions" }, [h("h3", { text: "Change the card" }), form])
+        );
+      });
     }).catch(fail);
   }
 

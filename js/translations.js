@@ -503,5 +503,22 @@ window.HOPE_MY = {
   "Could not open the file.": "ဖိုင်ကို မဖွင့်နိုင်ပါ။",
   "No marked lessons this month.": "ဤလ မှတ်ပြီးသော သင်ခန်းစာ မရှိပါ။",
   "No lessons this month.": "ဤလ သင်ခန်းစာ မရှိပါ။",
-  "Attendance rate = lessons attended ÷ lessons marked. Cancelled and make-up lessons are not counted. Keep at least 80%.": "တက်ရောက်နှုန်း = တက်ရောက်ခဲ့သော သင်ခန်းစာ ÷ မှတ်ပြီးသော သင်ခန်းစာ။ ပယ်ဖျက်ထားသော နှင့် အစားထိုး သင်ခန်းစာများကို မတွက်ပါ။ အနည်းဆုံး ၈၀% ထားပါ။"
+  "Attendance rate = lessons attended ÷ lessons marked. Cancelled and make-up lessons are not counted. Keep at least 80%.": "တက်ရောက်နှုန်း = တက်ရောက်ခဲ့သော သင်ခန်းစာ ÷ မှတ်ပြီးသော သင်ခန်းစာ။ ပယ်ဖျက်ထားသော နှင့် အစားထိုး သင်ခန်းစာများကို မတွက်ပါ။ အနည်းဆုံး ၈၀% ထားပါ။",
+
+  /* ---------- Student ID card ---------- */
+  "Photo for your student ID card <span class=\"req\">*</span>": "ကျောင်းသား ID ကတ်အတွက် ဓာတ်ပုံ <span class=\"req\">*</span>",
+  "A clear, recent photo of the student's face, looking at the camera, on a plain background. JPG, PNG or WEBP.": "ကင်မရာကို ကြည့်ထားသော ကျောင်းသား၏ မျက်နှာ ရှင်းရှင်းလင်းလင်း မြင်ရသည့် မကြာသေးမီက ဓာတ်ပုံ၊ ရိုးရိုး နောက်ခံဖြင့်။ JPG, PNG သို့မဟုတ် WEBP။",
+  "Please choose a photo (JPG, PNG or WEBP).": "ဓာတ်ပုံ ရွေးပါ (JPG, PNG သို့မဟုတ် WEBP)။",
+  "ID card": "ID ကတ်",
+  "My student ID card": "ကျွန်ုပ်၏ ကျောင်းသား ID ကတ်",
+  "Add a photo for your ID card: a clear, recent photo of your face, looking at the camera, on a plain background. You can add it once; after that, ask Hope Education to change it.": "ID ကတ်အတွက် ဓာတ်ပုံ ထည့်ပါ - ကင်မရာကို ကြည့်ထားသော သင့်မျက်နှာ ရှင်းရှင်းလင်းလင်း မြင်ရသည့် မကြာသေးမီက ဓာတ်ပုံ၊ ရိုးရိုး နောက်ခံဖြင့်။ တစ်ကြိမ်သာ ထည့်နိုင်ပါသည်၊ ထို့နောက် ပြောင်းလိုပါက Hope Education ကို ဆက်သွယ်ပါ။",
+  "Photo (JPG, PNG or WEBP)": "ဓာတ်ပုံ (JPG, PNG သို့မဟုတ် WEBP)",
+  "Save photo": "ဓာတ်ပုံ သိမ်းရန်",
+  "Print my card": "ကတ် ပုံနှိပ်ရန်",
+  "Show this card when Hope Education asks for your Student ID. Keep your Student ID private — it is not a password, but only you should use it.": "Hope Education က ကျောင်းသား ID တောင်းသည့်အခါ ဤကတ်ကို ပြပါ။ ကျောင်းသား ID ကို လျှို့ဝှက်ထားပါ — စကားဝှက် မဟုတ်သော်လည်း သင်တစ်ဦးတည်းသာ အသုံးပြုသင့်ပါသည်။",
+  "Photo saved. Your ID card is ready.": "ဓာတ်ပုံ သိမ်းပြီးပါပြီ။ သင်၏ ID ကတ် အသင့်ဖြစ်ပါပြီ။",
+  "This photo is too small. Please choose a bigger one.": "ဤဓာတ်ပုံ သေးလွန်းပါသည်။ ပိုကြီးသော ဓာတ်ပုံ ရွေးပါ။",
+  "Could not save the photo.": "ဓာတ်ပုံကို မသိမ်းနိုင်ပါ။",
+  "You already have a photo. Please ask Hope Education to change it.": "ဓာတ်ပုံ ရှိပြီးသား ဖြစ်ပါသည်။ ပြောင်းလိုပါက Hope Education ကို ဆက်သွယ်ပါ။",
+  "The photo could not be found. Please choose it again.": "ဓာတ်ပုံကို ရှာမတွေ့ပါ။ ထပ်မံ ရွေးပါ။"
 };

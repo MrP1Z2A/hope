@@ -82,6 +82,17 @@
                   <label for="phone">Phone / WhatsApp</label>
                   <input id="phone" name="phone" type="tel" autocomplete="tel">
                 </div>
+                <div class="field field--full photo-field">
+                  <label for="photo">Photo for your student ID card <span class="req">*</span></label>
+                  <div class="photo-pick">
+                    <div class="photo-preview" aria-hidden="true"><img id="photo-preview" alt="" hidden><span id="photo-empty">3 : 4</span></div>
+                    <div>
+                      <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+                      <p class="field-hint">A clear, recent photo of the student's face, looking at the camera, on a plain background. JPG, PNG or WEBP.</p>
+                    </div>
+                  </div>
+                  <span class="error-msg">Please choose a photo (JPG, PNG or WEBP).</span>
+                </div>
                 <div class="field field--full">
                   <label class="consent">
                     <input type="checkbox" name="under_18" id="under18">

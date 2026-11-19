@@ -1,0 +1,67 @@
+/* Hope Education — digital student ID card (js/id-card.js).
+   Standard bank-card shape (85.6 × 54 mm). Sizes use "cqw" (1% of the card's width),
+   so the card looks the same at any size and prints at its real size. */
+
+.id-card-pair { display: grid; gap: 18px; justify-items: center; width: 100%; }
+.id-card {
+  container-type: inline-size;
+  width: min(100%, 440px); aspect-ratio: 85.6 / 54;
+  position: relative; overflow: hidden;
+  border-radius: 3.7% / 5.9%; background: #fff; color: #14294a;
+  box-shadow: 0 6px 24px rgba(20, 41, 74, .16); border: 1px solid #e3e7ee;
+  font-family: "Nunito Sans", system-ui, sans-serif;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+/* ----- Front ----- */
+.idc-band {
+  position: absolute; inset: 0 0 auto 0; height: 19%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5cqw 0 6cqw; background: #14294a; color: #fff;
+}
+.idc-band-title { font-family: "Marcellus", Georgia, serif; font-size: 8.4cqw; line-height: 1; letter-spacing: .02em; }
+.idc-band-mark { display: flex; align-items: center; gap: 1.8cqw; font-family: "Marcellus", Georgia, serif; font-size: 8.4cqw; line-height: 1; }
+.idc-band-mark b {
+  display: grid; place-items: center; height: 12.6cqw; padding: 0 2.2cqw;
+  background: #c9a24a; color: #14294a; font-weight: 400; font-size: 7.4cqw;
+}
+
+.idc-front-body {
+  position: absolute; inset: 19% 0 0 0; display: grid; grid-template-columns: 1fr 26.5cqw;
+  gap: 4cqw; padding: 4cqw 5.5cqw 4.4cqw 6cqw;
+}
+.idc-logo { width: 30cqw; aspect-ratio: 445 / 165; overflow: hidden; position: relative; margin: 0 0 3cqw -.6cqw; }
+/* Only the "Hope" word and star from images/logo.jpg (640 × 640): x 105–550, y 185–350 */
+.idc-logo img { position: absolute; width: 143.8%; max-width: none; left: -23.6%; top: -112.1%; mix-blend-mode: multiply; }
+.idc-name { margin: 0; font-weight: 800; font-size: 6.2cqw; line-height: 1.12; margin: 0; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.idc-line { font-size: 3.2cqw; line-height: 1.3; margin: 1.4cqw 0 0; color: #3b4a63;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.idc-valid { position: absolute; left: 6cqw; bottom: 4.6cqw; margin: 0; font-size: 4.3cqw; line-height: 1; letter-spacing: .02em; }
+.idc-photo {
+  align-self: start; width: 26.5cqw; aspect-ratio: 3 / 4; border: .55cqw solid #14294a;
+  background: #eef1f6; display: grid; place-items: center; overflow: hidden;
+}
+.idc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.idc-photo span { font-size: 2.8cqw; color: #6b7a90; text-align: center; padding: 2cqw; }
+.idc-gold { position: absolute; right: 0; bottom: 0; width: 26%; height: 2.2cqw; background: #c9a24a; }
+
+/* ----- Back ----- */
+.idc-back-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 5.6cqw 6cqw 4.6cqw; }
+.idc-back-top { font-size: 3.7cqw; margin: 0 0 3.4cqw; font-weight: 700; }
+.idc-back-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; font-size: 3.15cqw; line-height: 1.35; flex: 1; }
+.idc-back-cols p { margin: 0 0 2.4cqw; }
+.idc-back-cols b { display: block; }
+.idc-back-cols u { text-decoration-thickness: .2cqw; overflow-wrap: anywhere; }
+.idc-back-no { margin: 0; display: flex; align-items: baseline; gap: 2.6cqw; font-weight: 800; font-size: 5.4cqw; letter-spacing: .02em; }
+.idc-back-no span { font-size: 4.4cqw; }
+.idc-back .idc-strip { position: absolute; left: 0; right: 0; top: 0; height: 1.6cqw; background: #14294a; }
+
+/* Printing: only the card, at its real size, front and back */
+.id-card-print { display: none; }
+@media print {
+  body.printing-card > *:not(.id-card-print) { display: none !important; }
+  body.printing-card .id-card-print { display: grid !important; gap: 8mm; justify-content: start; padding: 10mm; }
+  body.printing-card .id-card { width: 85.6mm; box-shadow: none; border: .2mm solid #c8ced8; break-inside: avoid; }
+  @page { margin: 0; }
+}

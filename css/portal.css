@@ -287,3 +287,8 @@ a.login-logo { display: block; }
 @media (max-width: 520px) {
   .request-form, .homework-add { grid-template-columns: 1fr; }
 }
+
+/* ID card: enrolment photo (admin) and the card tab (student) */
+.enrol-photo img { width: 150px; aspect-ratio: 3 / 4; object-fit: cover; }
+.id-card-panel { justify-items: stretch; }
+.id-card-panel .btn-row { justify-content: center; }

@@ -64,6 +64,34 @@ window.hopeUpload = function (bucket, file) {
   });
 };
 
+/* Turn a chosen picture into the ID-card photo: cropped to 3:4 from the centre,
+   600 × 800 pixels, JPEG. Resolves with a File named "photo.jpg" (well under 2 MB). */
+window.hopeIdPhoto = function (file) {
+  return new Promise(function (resolve, reject) {
+    if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) { reject(new Error("type")); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      var W = 600, H = 800, sw = img.naturalWidth, sh = img.naturalHeight;
+      if (sw < 150 || sh < 200) { URL.revokeObjectURL(url); reject(new Error("small")); return; }
+      var cropW = Math.min(sw, sh * 3 / 4), cropH = cropW * 4 / 3;
+      var canvas = document.createElement("canvas");
+      canvas.width = W; canvas.height = H;
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, W, H);
+      ctx.drawImage(img, (sw - cropW) / 2, Math.max(0, (sh - cropH) / 2), cropW, cropH, 0, 0, W, H);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function (blob) {
+        if (!blob) { reject(new Error("convert")); return; }
+        resolve(new File([blob], "photo.jpg", { type: "image/jpeg" }));
+      }, "image/jpeg", 0.88);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("read")); };
+    img.src = url;
+  });
+};
+
 /* Save one row to a table. Returns a Promise that rejects if saving failed. */
 window.hopeSave = function (table, row) {
   var cfg = window.HOPE_SUPABASE;

@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/portal.css">
+  <link rel="stylesheet" href="css/id-card.css">
 </head>
 <body class="admin-page student-page">
 
@@ -65,6 +66,7 @@
         <button type="button" role="tab" data-tab="messages" aria-selected="false"><span>Messages</span> <span class="tab-count" id="c-messages" hidden data-no-translate></span></button>
         <button type="button" role="tab" data-tab="attendance" aria-selected="false">Attendance</button>
         <button type="button" role="tab" data-tab="chat" aria-selected="false">Student chat</button>
+        <button type="button" role="tab" data-tab="card" aria-selected="false">ID card</button>
       </nav>
       <p class="admin-toast" id="toast" role="status" hidden data-no-translate></p>
 
@@ -147,6 +149,23 @@
         </section>
       </div>
 
+      <!-- ===== ID card tab ===== -->
+      <div class="admin-panel" data-panel="card" hidden>
+        <section class="card my-lessons id-card-panel">
+          <h2>My student ID card</h2>
+          <div id="card-box" data-no-translate></div>
+          <form class="absence-form" id="card-photo-form" hidden novalidate>
+            <p>Add a photo for your ID card: a clear, recent photo of your face, looking at the camera, on a plain background. You can add it once; after that, ask Hope Education to change it.</p>
+            <label for="card-photo">Photo (JPG, PNG or WEBP)</label>
+            <input id="card-photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+            <p class="admin-error" id="card-photo-error" role="alert" hidden data-no-translate></p>
+            <div><button type="submit" class="btn btn--gold btn--sm">Save photo</button></div>
+          </form>
+          <div class="btn-row"><button type="button" class="btn btn--gold btn--sm" id="card-print" hidden>Print my card</button></div>
+          <p class="small-note">Show this card when Hope Education asks for your Student ID. Keep your Student ID private — it is not a password, but only you should use it.</p>
+        </section>
+      </div>
+
       <!-- ===== Group chat tab ===== -->
       <div class="admin-panel" data-panel="chat" hidden>
       <div class="card chat-card">
@@ -170,6 +189,7 @@
   <script src="js/supabase.js"></script>
   <script src="js/main.js"></script>
   <script src="js/portal-messages.js"></script>
+  <script src="js/id-card.js"></script>
   <script src="js/student.js"></script>
 </body>
 </html>

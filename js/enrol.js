@@ -92,6 +92,33 @@
   }
   receiptInput.addEventListener("change", checkReceipt);
 
+  /* ---------- Photo for the student ID card (cropped to 3:4 in the browser) ---------- */
+  var PHOTO_BUCKET = "student-photos";
+  var photoInput = document.getElementById("photo");
+  var photoPreview = document.getElementById("photo-preview");
+  var photoFile = null;   // the cropped JPEG that will be uploaded
+  photoInput.addEventListener("change", function () {
+    photoFile = null;
+    photoPreview.hidden = true;
+    document.getElementById("photo-empty").hidden = false;
+    var file = photoInput.files[0];
+    if (!file) { photoInput.setCustomValidity(""); return; }
+    photoInput.setCustomValidity("checking");
+    window.hopeIdPhoto(file).then(function (jpg) {
+      photoFile = jpg;
+      photoInput.setCustomValidity("");
+      if (photoPreview.src) URL.revokeObjectURL(photoPreview.src);
+      photoPreview.src = URL.createObjectURL(jpg);
+      photoPreview.hidden = false;
+      document.getElementById("photo-empty").hidden = true;
+    }).catch(function () {
+      photoInput.setCustomValidity("invalid");
+    }).then(function () {
+      var field = photoInput.closest(".field");
+      if (field.classList.contains("invalid") || photoInput.validity.customError) validateField(field);
+    });
+  });
+
   /* ---------- QR code and amount set by admins (admin portal → Website) ---------- */
   var qrImg = form.querySelector(".pay-qr img");
   var qrMissing = form.querySelector(".pay-qr-missing");
@@ -173,6 +200,13 @@
     ev.preventDefault();
     if (current !== LAST_STEP) { goNext(); return; } // Enter key moves to the next step
     if (!validateStep(current)) return;
+    // The photo can't be kept in a saved draft: if it's missing, go back and ask again.
+    if (!photoFile) {
+      showStep(1);
+      scrollToForm();
+      validateField(photoInput.closest(".field"));
+      return;
+    }
 
     var wrap = form.parentElement;
     function done() {
@@ -188,8 +222,10 @@
     if (!window.hopeSave || !window.hopeUpload) { done(); return; }
 
     sendBtn.disabled = true;
-    window.hopeUpload(RECEIPT_BUCKET, receiptInput.files[0])
-      .then(function (receiptPath) { return window.hopeSave("enrolments", buildRow(receiptPath)); })
+    var photoPath = null;
+    window.hopeUpload(PHOTO_BUCKET, photoFile)
+      .then(function (p) { photoPath = p; return window.hopeUpload(RECEIPT_BUCKET, receiptInput.files[0]); })
+      .then(function (receiptPath) { return window.hopeSave("enrolments", buildRow(receiptPath, photoPath)); })
       .then(done)
       .catch(function (err) {
         console.error(err);
@@ -199,7 +235,7 @@
   });
 
   /* One row for the "enrolments" table in Supabase (see supabase/schema.sql). */
-  function buildRow(receiptPath) {
+  function buildRow(receiptPath, photoPath) {
     var f = form.elements;
     var text = function (name) { var v = (f[name] && f[name].value || "").trim(); return v || null; };
     var under = under18.checked;
@@ -226,6 +262,7 @@
       receipt_path: receiptPath || null,
       payment_reference: text("payment_reference"),
       payment_submitted_at: receiptPath ? new Date().toISOString() : null,
+      photo_path: photoPath || null,
       language: document.documentElement.lang === "my" ? "my" : "en"
     };
   }
